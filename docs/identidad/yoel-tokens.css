@@ -1,0 +1,28 @@
+/* Tokens confirmados para el portafolio one-page de Yoel. */
+:root {
+  --yoel-background: #F8FAFC;
+  --yoel-primary: #2563EB;
+  --yoel-secondary: #475569;
+  --yoel-accent: #10B981;
+  --yoel-text: #0F172A;
+  --yoel-on-accent: #0F172A;
+  --yoel-font-heading: "Montserrat", sans-serif;
+  --yoel-font-body: "Roboto", sans-serif;
+  --yoel-h1: 2.5rem;
+  --yoel-h2: 1.75rem;
+  --yoel-h3: 1.25rem;
+  --yoel-body: 1rem;
+  --yoel-body-leading: 1.5;
+}
+[data-theme="dark"] {
+  --yoel-background: #0F172A;
+  --yoel-primary: #3B82F6;
+  --yoel-secondary: #1E293B;
+  --yoel-text: #F8FAFC;
+}
+@media (max-width: 47.999rem) {
+  :root { --yoel-h1: 2rem; --yoel-h2: 1.5rem; }
+}
+/* Cargar Montserrat 600/700 y Roboto 400/500 en el proyecto.
+   Con tamaño raíz de 16 px, los rem corresponden a los px elegidos.
+   Los umbrales responsive se ajustan tras revisar el contenido real. */

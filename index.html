@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Soy Yoel, estudiante de Ingeniería en Software con enfoque full-stack. Conocé mi perfil y contactame. Mis proyectos estarán disponibles próximamente." />
+    <meta name="theme-color" content="#F8FAFC" />
+    <meta name="color-scheme" content="light dark" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="es_CR" />
+    <meta property="og:title" content="Yoel | Portafolio en construcción" />
+    <meta property="og:description" content="Estudiante de Ingeniería en Software con enfoque en desarrollo full-stack. Próximamente, mis proyectos." />
+    <link rel="icon" type="image/svg+xml" href="%BASE_URL%brand/favicon-yoel.svg" />
+    <link rel="icon" type="image/png" sizes="32x32" href="%BASE_URL%brand/favicon-yoel-32.png" />
+    <title>Yoel | Portafolio en construcción</title>
+    <script>
+      // Aplicar el tema antes del primer render evita un destello del tema opuesto.
+      (() => {
+        let savedTheme = null;
+        try { savedTheme = localStorage.getItem('yoel-theme'); } catch { /* Almacenamiento restringido. */ }
+        const theme = savedTheme === 'light' || savedTheme === 'dark'
+          ? savedTheme
+          : (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+        document.documentElement.dataset.theme = theme;
+        document.querySelector('meta[name="theme-color"]').content = theme === 'dark' ? '#0F172A' : '#F8FAFC';
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <noscript>Activá JavaScript para ver el portafolio de Yoel. Podés escribirme a <a href="mailto:yoerojas03@gmail.com">yoerojas03@gmail.com</a> o por <a href="https://wa.me/50683904194">WhatsApp: +506 8390 4194</a>.</noscript>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
