@@ -2,17 +2,17 @@
 
 Homepage en construcción para la Tarea 2 de Identidad Visual Web. Aplicación estática con React, TypeScript, Vite y Tailwind CSS. Incluye la identidad original de Yoel, perfil profesional, contactos reales, navegación por anclas y selector de tema. No requiere backend, base de datos ni variables de entorno.
 
-Repositorio de destino: [yoel-portfolio/portafolio-web](https://github.com/yoel-portfolio/portafolio-web). El repositorio `.github` de la organización se reserva para su presentación; el código del portafolio pertenece a `portafolio-web`.
+Repositorio: [yoel-portfolio/yoel-portfolio](https://github.com/yoel-portfolio/yoel-portfolio), rama `codex/portafolio-base`. El repositorio `.github` de la organización se reserva para su presentación. La carpeta `.github/workflows/` de este proyecto contiene exclusivamente su automatización de despliegue.
 
 ## Ejecutar
 
 Requisitos: Node.js 22.12 o posterior (verificado con Node 24) y npm.
 
-Una vez que el código esté subido y tengas acceso al repositorio, podés obtenerlo con:
+Podés obtener el código con:
 
 ```sh
-git clone --branch codex/portafolio-base https://github.com/yoel-portfolio/portafolio-web.git
-cd portafolio-web
+git clone --branch codex/portafolio-base https://github.com/yoel-portfolio/yoel-portfolio.git
+cd yoel-portfolio
 ```
 
 Desde la carpeta del proyecto:
@@ -29,7 +29,7 @@ npm run build
 npm run preview
 ```
 
-`build` verifica TypeScript y genera `dist/`. `preview` sirve esa compilación, normalmente en `http://127.0.0.1:4173`. Estas direcciones son locales: la web todavía no está publicada.
+`build` verifica TypeScript y genera `dist/`. `preview` sirve esa compilación, normalmente en `http://127.0.0.1:4173`. Estas direcciones son locales; el despliegue público se gestiona mediante GitHub Pages.
 
 ## Archivos principales
 
@@ -46,6 +46,7 @@ npm run preview
 | `docs/identidad/` | Contenido original completo de Recursos_Yoel.zip; conserva misión, visión, valores, tokens y fondos para siguientes etapas. |
 | `vite.config.ts` | React, Tailwind y rutas relativas para despliegue estático. |
 | `tests/portfolio.spec.ts` | Verificaciones de navegador en escritorio y móvil. |
+| `.github/workflows/deploy.yml` | Instalación reproducible, compilación para Pages, pruebas y publicación de `dist/`. |
 
 ## Identidad y accesibilidad
 
@@ -69,21 +70,43 @@ npm test
 
 Las pruebas sirven la compilación de producción y revisan ambos temas en escritorio (1440 px) y móvil (390 px), fuentes, imágenes y favicons, errores de consola y HTTP, enlaces, anclas, teclado, persistencia, almacenamiento bloqueado, contraste y otras reglas WCAG A/AA con axe. También comprueban desbordamiento en 320/768/1024 px y texto al 200 %. Las capturas quedan en `test-results/`, que no se versiona. La comprobación automatizada complementa la revisión visual; no equivale a una certificación de accesibilidad.
 
-Para comprobar una ruta de GitHub Pages en PowerShell:
+Para reproducir exactamente la compilación de GitHub Pages y comprobar su subruta en PowerShell:
 
 ```powershell
-$env:PLAYWRIGHT_BASE_PATH = '/portafolio-web/'
+npm run build -- --base=/yoel-portfolio/
+$env:PLAYWRIGHT_BASE_PATH = '/yoel-portfolio/'
 npm test
 Remove-Item Env:PLAYWRIGHT_BASE_PATH
 ```
 
-## Publicación posterior
+Para ejecutar esas mismas pruebas sobre el sitio público, sin arrancar un servidor local:
 
-La configuración `base: './'` permite servir `dist/` tanto en la raíz de un dominio como en una subcarpeta. Los recursos públicos usan `import.meta.env.BASE_URL` o `%BASE_URL%`; conservá ese patrón para nuevos archivos. Las futuras secciones se añaden a la misma página y solo entonces se incorporan sus anclas al menú.
+```powershell
+$env:PLAYWRIGHT_BASE_URL = 'https://yoel-portfolio.github.io/yoel-portfolio/'
+npm test
+Remove-Item Env:PLAYWRIGHT_BASE_URL
+```
+
+## Publicación en GitHub Pages
+
+El workflow `.github/workflows/deploy.yml` se ejecuta al hacer push a `codex/portafolio-base` y manualmente desde **Actions → Publicar portafolio en GitHub Pages → Run workflow**. Esa rama también es la rama predeterminada del repositorio, por lo que la ejecución manual está disponible.
+
+El trabajo de compilación usa Node 24, `npm ci` y `npm run build -- --base=/yoel-portfolio/`. Ejecuta las pruebas de escritorio y móvil en esa subruta y, si pasan, carga únicamente `dist/` con `actions/upload-pages-artifact`. El trabajo dependiente publica con `actions/deploy-pages` en el entorno `github-pages`. Las acciones oficiales están fijadas a un commit y los permisos de publicación se limitan al trabajo de despliegue.
+
+URL de Pages: [https://yoel-portfolio.github.io/yoel-portfolio/](https://yoel-portfolio.github.io/yoel-portfolio/). El estado efectivo de cada publicación se consulta en [Actions](https://github.com/yoel-portfolio/yoel-portfolio/actions/workflows/deploy.yml) y en [Settings → Pages](https://github.com/yoel-portfolio/yoel-portfolio/settings/pages).
+
+Configuración necesaria en GitHub:
+
+- **Settings → Pages → Build and deployment → Source: GitHub Actions**.
+- GitHub Actions habilitado y acciones oficiales de `actions/*` permitidas.
+- Si el entorno `github-pages` restringe las ramas de despliegue, permitir `codex/portafolio-base`.
+- El trabajo de publicación necesita `pages: write` e `id-token: write`; ya están declarados en el workflow. No requiere un token personal guardado en secrets.
+
+La configuración local de Vite conserva `base: './'`; el comando del workflow la sustituye explícitamente por `/yoel-portfolio/`. Los recursos públicos usan `import.meta.env.BASE_URL` o `%BASE_URL%`; conservá ese patrón para nuevos archivos. Las fuentes se incluyen en `assets/`. Las futuras secciones se añaden a la misma página y solo entonces se incorporan sus anclas al menú.
 
 **Vercel:** importar el repositorio, seleccionar Vite, usar `npm ci` como instalación, `npm run build` como compilación y `dist` como carpeta de salida. No se necesitan reescrituras porque no hay rutas adicionales.
 
-**GitHub Pages:** después de subir el repositorio, seleccionar GitHub Actions en Settings → Pages. Preparar un flujo que haga checkout, configure Node 24, ejecute `npm ci` y `npm run build`, cargue `dist` con `actions/upload-pages-artifact` y publique con `actions/deploy-pages`. El trabajo de publicación necesita los permisos `pages: write` e `id-token: write` y el entorno `github-pages`. Confirmar los nombres del repositorio y de la rama al configurar el flujo. No es necesario versionar `dist`.
+No se versionan `dist/`, `node_modules/`, credenciales ni resultados temporales de pruebas.
 
 Referencia oficial: [despliegue estático de Vite](https://vite.dev/guide/static-deploy.html) y [integración de Tailwind con Vite](https://tailwindcss.com/docs/installation/using-vite).
 
@@ -92,6 +115,4 @@ Referencia oficial: [despliegue estático de Vite](https://vite.dev/guide/static
 - Confirmar «Código que impulsa ideas»; se cambia en `src/content.ts`, sin etiquetas de estado en la interfaz.
 - Incorporar proyectos reales y nuevas secciones dentro de esta misma página.
 - Confirmar y añadir perfiles profesionales cuando existan sus URL.
-- Completar la subida a `yoel-portfolio/portafolio-web` cuando esté disponible el acceso al repositorio configurado como `origin`.
-- Publicar en GitHub Pages o Vercel y verificar la URL real; subir el código a GitHub no publica por sí solo el sitio web.
 - Preparar el PDF académico en una etapa posterior. El PDF de `docs/identidad/` es el recurso de presentación original del ZIP, no una entrega generada.

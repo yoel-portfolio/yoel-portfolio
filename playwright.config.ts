@@ -1,7 +1,9 @@
 import { defineConfig, devices } from '@playwright/test'
 
 const basePath = process.env.PLAYWRIGHT_BASE_PATH || '/'
-const baseURL = `http://127.0.0.1:4173${basePath}`
+// La misma suite sirve para la compilación local y la URL pública de Pages.
+const publishedURL = process.env.PLAYWRIGHT_BASE_URL
+const baseURL = publishedURL || `http://127.0.0.1:4173${basePath}`
 
 export default defineConfig({
   testDir: './tests',
@@ -13,7 +15,7 @@ export default defineConfig({
     { name: 'escritorio', use: { viewport: { width: 1440, height: 1050 } } },
     { name: 'movil', use: { ...devices['iPhone 13'], defaultBrowserType: 'chromium' } },
   ],
-  webServer: {
+  webServer: publishedURL ? undefined : {
     command: `npm run preview -- --port 4173 --strictPort --base ${basePath}`,
     url: baseURL,
     reuseExistingServer: false,

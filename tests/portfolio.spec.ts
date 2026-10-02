@@ -33,6 +33,16 @@ for (const theme of ['light', 'dark'] as const) {
     }))
     expect(fonts.heading && fonts.section && fonts.body && fonts.button).toBe(true)
     expect(fonts.loaded).toHaveLength(4)
+    // Evita que una ruta absoluta a la raíz funcione localmente pero falle en Pages.
+    const resources = await page.evaluate(() => ({
+      base: new URL('.', location.href).href,
+      urls: [
+        ...[...document.images].map(image => image.src),
+        ...[...document.querySelectorAll<HTMLLinkElement>('link[rel="icon"], link[rel="stylesheet"]')].map(link => link.href),
+        ...performance.getEntriesByType('resource').map(entry => entry.name).filter(url => /\.(woff2?|js)(\?|$)/.test(url)),
+      ],
+    }))
+    expect(resources.urls.every(url => url.startsWith(resources.base))).toBe(true)
     await expect(page.locator('h1')).toHaveCSS('font-size', testInfo.project.name === 'movil' ? '32px' : '40px')
     await expect(page.locator('.profile-copy')).toHaveCSS('line-height', '24px')
     const accessibility = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21aa']).analyze()

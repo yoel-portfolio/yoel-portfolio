@@ -6,7 +6,7 @@ Validación realizada sobre la compilación de producción, con Chromium mediant
 
 - `npm run build`: correcto; TypeScript sin errores y recursos generados en `dist/`.
 - `npm test`: 12 pruebas aprobadas en la raíz `/`.
-- `PLAYWRIGHT_BASE_PATH=/portafolio-web/` y `npm test`: las mismas 12 pruebas aprobadas en la subruta correspondiente al repositorio de destino, incluyendo SVG, fuentes y favicons.
+- `PLAYWRIGHT_BASE_PATH=/yoel-portfolio/` y `npm test`: comprobación de la subruta de GitHub Pages, incluyendo SVG, fuentes y favicons, con la compilación `npm run build -- --base=/yoel-portfolio/`.
 - Escritorio de 1440 px y móvil de 390 px: capturas revisadas visualmente en modo claro y oscuro.
 - Sin desbordamiento horizontal a 320, 390, 768, 1024 y 1440 px; texto ampliado al 200 % comprobado a 390 px.
 - Tema inicial del sistema, cambios del sistema sin elección guardada, alternancia con Enter y Espacio y persistencia tras recarga: correctos.
@@ -37,4 +37,4 @@ Las capturas reproducibles de las pruebas están en `test-results/`. Esa carpeta
 
 ## Límites de esta entrega
 
-La emulación móvil se realizó en Chromium; no es una prueba en un dispositivo físico ni en Safari o Firefox. La comprobación en subruta es local: no se publicó la web ni existe una URL pública confirmada. No se generó el PDF académico; el PDF de identidad procede del ZIP original.
+La emulación móvil se realiza en Chromium; no es una prueba en un dispositivo físico ni en Safari o Firefox. La prueba de la subruta local no confirma por sí sola la publicación: el workflow y la URL pública se verifican por separado. No se generó el PDF académico; el PDF de identidad procede del ZIP original.
