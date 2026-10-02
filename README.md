@@ -1,3 +1,13 @@
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="public/brand/logo-yoel-oscuro.svg">
+  <source media="(prefers-color-scheme: light)" srcset="public/brand/logo-yoel-claro.svg">
+  <img alt="Yoel — Y veloz" src="public/brand/logo-yoel-claro.svg" width="310" height="88">
+</picture>
+
+Estudiante de Ingeniería en Software con enfoque en desarrollo full-stack. Aplico Java, Spring Boot, React y PostgreSQL para crear aplicaciones funcionales y mantenibles, con buenas prácticas y trabajo en equipo.
+
+**[Ver portafolio](https://yoel-portfolio.github.io/yoel-portfolio/)**
+
 # Yoel — portafolio one-page
 
 Homepage en construcción para la Tarea 2 de Identidad Visual Web. Aplicación estática con React, TypeScript, Vite y Tailwind CSS. Incluye la identidad original de Yoel, perfil profesional, contactos reales, navegación por anclas y selector de tema. No requiere backend, base de datos ni variables de entorno.
