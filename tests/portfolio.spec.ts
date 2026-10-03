@@ -18,6 +18,16 @@ for (const theme of ['light', 'dark'] as const) {
     await expect(page.getByRole('link', { name: /Correo electrónico/ })).toHaveAttribute('href', 'mailto:yoerojas03@gmail.com')
     await expect(page.getByRole('link', { name: /WhatsApp/ })).toHaveAttribute('href', 'https://wa.me/50683904194')
     await expect(page.getByRole('link', { name: 'Conversemos' })).toHaveAttribute('href', 'mailto:yoerojas03@gmail.com')
+    await expect(page.locator('.profile-copy')).toHaveText('Ingeniero de software con enfoque en desarrollo full-stack. Desarrollo aplicaciones con C#, Java y JavaScript, utilizando React, Angular, Node.js y Spring Boot. Trabajo con HTML, CSS y bases de datos PostgreSQL y MySQL, e integro Docker y CI/CD para facilitar la entrega de software.')
+    await expect(page.getByRole('heading', { name: 'Sobre mí', exact: true })).toHaveCount(1)
+    await expect(page.locator('.about-copy')).toHaveText('Valoro el trabajo en equipo, las ideas de los demás y el cumplimiento de mis compromisos. Organizo mi trabajo y mantengo la calma bajo presión para definir prioridades y resolver problemas. Me motiva aprender y mejorar lo que hago.')
+    await expect(page.locator('.about-copy')).toHaveCSS('line-height', '24px')
+    const linkedin = page.getByRole('link', { name: /LinkedIn.*Yoel Rojas/ })
+    await expect(linkedin).toHaveCount(1)
+    await expect(linkedin).toHaveAttribute('href', 'https://www.linkedin.com/in/yoel-rojas-97a07b413/')
+    await expect(linkedin).toHaveAttribute('target', '_blank')
+    await expect(linkedin).toHaveAttribute('rel', 'noopener noreferrer')
+    await expect(page.locator('.hero-slogan')).toHaveText('Código que impulsa ideas')
 
     expect(await page.locator('img').evaluateAll((images) => images.every((image) => image instanceof HTMLImageElement && image.complete && image.naturalWidth > 0))).toBe(true)
     for (const favicon of await page.locator('link[rel="icon"]').evaluateAll((links) => links.map((link) => (link as HTMLLinkElement).href))) {

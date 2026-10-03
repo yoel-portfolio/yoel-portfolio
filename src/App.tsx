@@ -33,6 +33,10 @@ function Profile() {
       <ul className="tech-list flex flex-wrap gap-2" aria-label="Tecnologías que utilizo">
         {content.technologies.map((technology) => <li key={technology}>{technology}</li>)}
       </ul>
+      <div className="profile-about">
+        <h3>Sobre mí</h3>
+        <p className="about-copy">{content.about}</p>
+      </div>
     </section>
   )
 }
@@ -52,6 +56,11 @@ function Contact() {
         <a className="contact-link group" href={content.whatsapp.href} target="_blank" rel="noopener noreferrer">
           <span className="contact-icon"><Icon name="whatsapp" /></span>
           <span className="contact-details"><span className="contact-label">WhatsApp <span className="sr-only">(abre una pestaña nueva)</span></span><span>{content.whatsapp.label}</span></span>
+          <Icon name="arrow" className="contact-arrow" />
+        </a>
+        <a className="contact-link group" href={content.linkedin.href} target="_blank" rel="noopener noreferrer">
+          <span className="contact-icon"><Icon name="linkedin" /></span>
+          <span className="contact-details"><span className="contact-label">LinkedIn <span className="sr-only">(abre una pestaña nueva)</span></span><span>{content.linkedin.label}</span></span>
           <Icon name="arrow" className="contact-arrow" />
         </a>
       </div>

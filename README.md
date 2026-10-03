@@ -4,7 +4,7 @@
   <img alt="Yoel — Y veloz" src="public/brand/logo-yoel-claro.svg" width="310" height="88">
 </picture>
 
-Estudiante de Ingeniería en Software con enfoque en desarrollo full-stack. Aplico Java, Spring Boot, React y PostgreSQL para crear aplicaciones funcionales y mantenibles, con buenas prácticas y trabajo en equipo.
+Ingeniero de software con enfoque en desarrollo full-stack. Desarrollo aplicaciones con C#, Java y JavaScript, utilizando React, Angular, Node.js y Spring Boot. Trabajo con HTML, CSS y bases de datos PostgreSQL y MySQL, e integro Docker y CI/CD para facilitar la entrega de software.
 
 **[Ver portafolio](https://yoel-portfolio.github.io/yoel-portfolio/)**
 
@@ -46,7 +46,7 @@ npm run preview
 | Archivo | Función |
 | --- | --- |
 | `src/App.tsx` | Cabecera, portada, perfil, contacto y pie; componentes sencillos y secciones existentes `#perfil` y `#contacto`. |
-| `src/content.ts` | Perfil, tecnologías, contactos y **slogan pendiente de confirmación**. |
+| `src/content.ts` | Perfil profesional, texto «Sobre mí», tecnologías, correo, WhatsApp, LinkedIn y **slogan pendiente de confirmación**. |
 | `src/styles.css` | Tailwind, variables semánticas, tipografía, composición adaptable, foco y movimiento reducido. |
 | `src/useTheme.ts` | Preferencia del sistema, selección persistente y sincronización entre pestañas. |
 | `src/components/Icon.tsx` | Pequeños íconos de interfaz, independientes del logotipo. |
@@ -66,7 +66,9 @@ El título utiliza Montserrat 700 de 40 px en escritorio y 32 px en móvil; las 
 
 El tema sigue al sistema hasta que se elige uno manualmente. El botón «Modo oscuro» expone `aria-pressed` y funciona con Enter o Espacio. La elección se guarda en `localStorage` bajo `yoel-theme`. Si el navegador bloquea el almacenamiento, el selector sigue funcionando durante la sesión. Para volver al comportamiento automático, se puede eliminar esa clave desde las herramientas del navegador. El logo y el color del navegador cambian con el tema.
 
-Se incluyen salto al contenido, foco visible, HTML semántico, nombres accesibles y respeto por `prefers-reduced-motion`. WhatsApp abre una pestaña nueva e informa de ello a lectores de pantalla.
+Se incluyen salto al contenido, foco visible, HTML semántico, nombres accesibles y respeto por `prefers-reduced-motion`. WhatsApp y [LinkedIn](https://www.linkedin.com/in/yoel-rojas-97a07b413/) abren una pestaña nueva, utilizan `rel="noopener noreferrer"` e informan de ello a lectores de pantalla.
+
+El perfil profesional y «Sobre mí» se mantienen en `src/content.ts`. Los archivos de `docs/identidad/` conservan el paquete original como referencia histórica; su presentación como estudiante ha sido sustituida en la web y sus metadatos por el perfil actualizado de ingeniero de software.
 
 ## Verificación
 
@@ -124,5 +126,5 @@ Referencia oficial: [despliegue estático de Vite](https://vite.dev/guide/static
 
 - Confirmar «Código que impulsa ideas»; se cambia en `src/content.ts`, sin etiquetas de estado en la interfaz.
 - Incorporar proyectos reales y nuevas secciones dentro de esta misma página.
-- Confirmar y añadir perfiles profesionales cuando existan sus URL.
+- Añadir otros perfiles profesionales únicamente cuando se confirmen sus URL; LinkedIn ya está incorporado.
 - Preparar el PDF académico en una etapa posterior. El PDF de `docs/identidad/` es el recurso de presentación original del ZIP, no una entrega generada.
