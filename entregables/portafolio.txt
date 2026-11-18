@@ -1,0 +1,27 @@
+URLs del portafolio de Yoel Alexander Rojas Arguedas
+
+1. Repositorio en GitHub:
+https://github.com/yoel-portfolio/yoel-portfolio
+
+2. URL pública (GitHub Pages):
+https://yoel-portfolio.github.io/yoel-portfolio/
+
+---
+
+Guía breve para la exposición (cierre del curso)
+
+1. Presentación e identidad (1 min)
+   - Marca "Yoel", enfoque laboral full-stack, paleta 60-30-10 (azul noche #0F172A, azul de marca #2563EB / #3B82F6, acento #10B981) y tipografía Montserrat / Roboto servida localmente.
+   - Demostrar cambio de tema claro/oscuro y selector de idioma ES/EN con persistencia en navegador.
+
+2. Cinco secciones y contenido (2 min)
+   - Inicio: presentación, arte vectorial original, acceso a proyectos y espacio preparado para descarga de CV ES/EN.
+   - Mi perfil (#perfil): perfil profesional, Sobre mí, Misión, Visión y los seis Valores.
+   - Habilidades técnicas y personales (#habilidades): cinco áreas técnicas, cuatro habilidades personales, filtro interactivo por categoría, ilustración conceptual SVG propia y animación vectorial JSON con Lottie y control de reproducción.
+   - Proyectos (#proyectos): galería filtrable con los tres repositorios reales verificados (OrderMS y PaymentMS, Velocity y Sistema de gestión académica), participación confirmada y ficha modal accesible con teclado (Escape devuelve el foco).
+   - Contacto (#contacto): correo, WhatsApp, LinkedIn, GitHub y formulario programado con React Hook Form + Zod (con validación y manejo honesto de endpoint estático), más botón flotante de WhatsApp y botón Scrolltop sin solapamiento.
+
+3. Logros, dificultades y aprendizajes (1 min)
+   - Logros: ampliación modular dentro de proyecto/ conservando intactos los recursos SVG, textos protegidos y pruebas base.
+   - Dificultades: asegurar accesibilidad WCAG (foco, contraste en ambos temas, sin desbordamiento a 320 px y 200 % de zoom) y evitar dependencias rotas cuando faltan archivos externos (CV PDF o endpoint del formulario).
+   - Aprendizajes: separación de datos, internacionalización ES/EN sin duplicar rutas bajo /yoel-portfolio/ y verificación automatizada con Playwright + axe-core.
