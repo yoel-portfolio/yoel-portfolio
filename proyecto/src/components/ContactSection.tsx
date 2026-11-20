@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, type CSSProperties } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -124,7 +124,7 @@ export function ContactSection({ lang }: { lang: Language }) {
   return (
     <section id="contacto" aria-labelledby="contact-title" className="contact-section-full scroll-mt-8">
       <div className="contact-layout-grid">
-        <div className="contact-info-col">
+        <div className="contact-info-col" data-reveal>
           <p className="eyebrow section-eyebrow">
             <span aria-hidden="true">{t.eyebrowNum}</span> {t.eyebrowLabel}
           </p>
@@ -176,7 +176,7 @@ export function ContactSection({ lang }: { lang: Language }) {
           </div>
         </div>
 
-        <div className="contact-form-card">
+        <div className="contact-form-card" data-reveal style={{ '--reveal-delay': '110ms' } as CSSProperties}>
           <h3 className="contact-form-title">{t.formTitle}</h3>
           <p className="contact-form-subtitle">{t.formSubtitle}</p>
 

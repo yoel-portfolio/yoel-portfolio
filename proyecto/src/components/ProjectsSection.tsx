@@ -1,10 +1,8 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import { createPortal } from 'react-dom'
-import { verifiedProjects, type ProjectCategory, type VerifiedProject } from '../data/portfolioData'
+import { verifiedProjects, type VerifiedProject } from '../data/portfolioData'
 import { translations, type Language } from '../i18n'
 import { Icon } from './Icon'
-
-type ProjectFilter = 'all' | ProjectCategory
 
 const FOCUSABLE_SELECTOR =
   'a[href], area[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
@@ -18,10 +16,9 @@ function getFocusableElements(container: HTMLElement): HTMLElement[] {
   )
 }
 
-function ProjectConceptualSvg({ project, tag, lang }: { project: VerifiedProject; tag: string; lang: Language }) {
+function ProjectConceptualSvg({ project, lang }: { project: VerifiedProject; lang: Language }) {
   return (
     <div className="project-diagram-wrap">
-      <span className="project-conceptual-badge">{tag}</span>
       <svg
         className="project-diagram-svg"
         viewBox="0 0 360 100"
@@ -29,10 +26,19 @@ function ProjectConceptualSvg({ project, tag, lang }: { project: VerifiedProject
         aria-label={project.diagramCaption[lang]}
       >
         <rect x="0" y="0" width="360" height="100" rx="6" fill="var(--color-background)" />
-        <line x1="65" y1="50" x2="295" y2="50" stroke="var(--color-brand)" strokeWidth="1.5" strokeDasharray="4 3" />
-        <rect x="14" y="28" width="98" height="44" rx="5" fill="var(--color-surface)" stroke="var(--color-border)" strokeWidth="1.2" />
-        <rect x="131" y="28" width="98" height="44" rx="5" fill="var(--color-surface)" stroke="var(--color-brand)" strokeWidth="1.4" />
-        <rect x="248" y="28" width="98" height="44" rx="5" fill="var(--color-surface)" stroke="var(--color-accent-text)" strokeWidth="1.4" />
+        <line
+          className="project-diagram-flow"
+          x1="65"
+          y1="50"
+          x2="295"
+          y2="50"
+          stroke="var(--color-brand)"
+          strokeWidth="1.6"
+          strokeDasharray="5 4"
+        />
+        <rect className="project-diagram-node" x="14" y="28" width="98" height="44" rx="6" fill="var(--color-surface)" stroke="var(--color-border)" strokeWidth="1.2" />
+        <rect className="project-diagram-node project-diagram-node-mid" x="131" y="28" width="98" height="44" rx="6" fill="var(--color-surface)" stroke="var(--color-brand)" strokeWidth="1.4" />
+        <rect className="project-diagram-node" x="248" y="28" width="98" height="44" rx="6" fill="var(--color-surface)" stroke="var(--color-accent-text)" strokeWidth="1.4" />
         <text x="63" y="54" textAnchor="middle" fontSize="9.5" fontWeight="500" fontFamily="var(--font-body)" fill="var(--color-text)">{project.diagramNodes[0]}</text>
         <text x="180" y="54" textAnchor="middle" fontSize="9.5" fontWeight="600" fontFamily="var(--font-heading)" fill="var(--color-brand-text)">{project.diagramNodes[1]}</text>
         <text x="297" y="54" textAnchor="middle" fontSize="9.5" fontWeight="500" fontFamily="var(--font-body)" fill="var(--color-text)">{project.diagramNodes[2]}</text>
@@ -42,15 +48,12 @@ function ProjectConceptualSvg({ project, tag, lang }: { project: VerifiedProject
 }
 
 export function ProjectsSection({ lang }: { lang: Language }) {
-  const [filter, setFilter] = useState<ProjectFilter>('all')
   const [selectedProject, setSelectedProject] = useState<VerifiedProject | null>(null)
   const triggerButtonRef = useRef<HTMLButtonElement | null>(null)
   const closeButtonRef = useRef<HTMLButtonElement | null>(null)
   const modalRef = useRef<HTMLDivElement | null>(null)
   const shouldRestoreFocusRef = useRef(false)
   const t = translations[lang].projects
-
-  const filtered = filter === 'all' ? verifiedProjects : verifiedProjects.filter((p) => p.category === filter)
 
   useEffect(() => {
     if (!selectedProject) {
@@ -148,7 +151,7 @@ export function ProjectsSection({ lang }: { lang: Language }) {
 
   return (
     <section id="proyectos" aria-labelledby="projects-title" className="projects-section scroll-mt-8">
-      <div className="section-header-row">
+      <div className="section-header-row" data-reveal>
         <div>
           <p className="eyebrow section-eyebrow">
             <span aria-hidden="true">{t.eyebrowNum}</span> {t.eyebrowLabel}
@@ -156,38 +159,17 @@ export function ProjectsSection({ lang }: { lang: Language }) {
           <h2 id="projects-title">{t.title}</h2>
           <p className="section-intro">{t.intro}</p>
         </div>
-
-        <div className="projects-filter-col">
-          <div className="filter-group" role="group" aria-label={t.filterAria}>
-            {(
-              [
-                { id: 'all', label: t.filterAll },
-                { id: 'backend', label: t.filterBackend },
-                { id: 'frontend', label: t.filterFrontend },
-                { id: 'fullstack', label: t.filterFullstack },
-              ] as const
-            ).map((option) => (
-              <button
-                key={option.id}
-                type="button"
-                className="filter-pill"
-                aria-pressed={filter === option.id}
-                onClick={() => setFilter(option.id)}
-              >
-                {option.label}
-              </button>
-            ))}
-          </div>
-          <p className="projects-count" aria-live="polite">
-            {t.countLabel(filtered.length, verifiedProjects.length)}
-          </p>
-        </div>
       </div>
 
       <div className="projects-grid">
-        {filtered.map((project) => (
-          <article key={project.id} className="project-card">
-            <ProjectConceptualSvg project={project} tag={t.conceptualTag} lang={lang} />
+        {verifiedProjects.map((project, index) => (
+          <article
+            key={project.id}
+            className="project-card"
+            data-reveal
+            style={{ '--reveal-delay': `${index * 110}ms` } as CSSProperties}
+          >
+            <ProjectConceptualSvg project={project} lang={lang} />
 
             <div className="project-card-body">
               <h3 className="project-title">{project.title[lang]}</h3>
@@ -263,7 +245,7 @@ export function ProjectsSection({ lang }: { lang: Language }) {
               </div>
 
               <div className="project-modal-body">
-                <ProjectConceptualSvg project={selectedProject} tag={t.conceptualTag} lang={lang} />
+                <ProjectConceptualSvg project={selectedProject} lang={lang} />
                 <p className="project-modal-desc">{selectedProject.description[lang]}</p>
 
                 <div className="project-modal-block">

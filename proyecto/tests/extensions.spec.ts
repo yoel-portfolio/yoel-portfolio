@@ -213,39 +213,46 @@ test('CV: botón por idioma ES -> EN -> ES descarga el PDF correcto o muestra pe
   }
 })
 
-test('filtros de habilidades, ilustración SVG y animación Lottie JSON real', async ({ page }) => {
+test('habilidades técnicas arriba y personales abajo, sin ilustración conceptual ni animación de flujo', async ({ page }) => {
   await page.goto('./')
+  const hero = page.locator('section.hero')
+  await expect(hero.getByRole('link')).toHaveCount(1)
+  await expect(hero.getByRole('link', { name: 'Descargar CV', exact: true })).toBeVisible()
+  await expect(hero.locator('.hero-description')).toHaveCount(0)
+
   const skills = page.locator('#habilidades')
   await expect(skills.locator('.skill-card')).toHaveCount(5)
   await expect(skills.locator('.personal-skill-card')).toHaveCount(4)
+  await expect(skills.locator('.filter-pill')).toHaveCount(0)
+  await expect(skills.locator('svg.arch-svg')).toHaveCount(0)
+  await expect(skills.locator('.lottie-stage')).toHaveCount(0)
 
-  await skills.getByRole('button', { name: 'Personales' }).click()
-  await expect(skills.locator('.skill-card')).toHaveCount(0)
-  await expect(skills.locator('.personal-skill-card')).toHaveCount(4)
+  // Habilidades técnicas aparece primero y personales debajo al desplazar
+  const technicalBox = await skills.locator('.skills-block-technical').boundingBox()
+  const personalBox = await skills.locator('.skills-block-personal').boundingBox()
+  expect(technicalBox && personalBox).toBeTruthy()
+  if (technicalBox && personalBox) {
+    expect(personalBox.y).toBeGreaterThanOrEqual(technicalBox.y + technicalBox.height)
+  }
 
-  await skills.getByRole('button', { name: 'Todas' }).click()
-  await expect(skills.locator('.skill-card')).toHaveCount(5)
-
-  // Verifica ilustración SVG conceptual y reproductor Lottie real en DOM
-  await expect(skills.locator('svg.arch-svg')).toBeVisible()
-  await expect(skills.locator('.lottie-stage svg')).toBeVisible({ timeout: 5000 })
-  const lottieBtn = skills.locator('.lottie-control-btn')
-  await lottieBtn.click()
-  await expect(lottieBtn).toHaveAttribute('aria-pressed', 'false')
+  // Verifica que el scroll-reveal marque los bloques como revelados al desplazarse
+  await skills.locator('.skills-block-personal').scrollIntoViewIfNeeded()
+  await expect(skills.locator('.personal-skill-card').first()).toHaveAttribute('data-revealed', 'true')
 })
 
-test('galería de proyectos: filtros, foco atrapado con Tab/Shift+Tab, fondo inactivo, Escape y devolución de foco', async ({
+test('galería de proyectos: los 3 proyectos sin filtros, animación al desplazar, foco atrapado con Tab/Shift+Tab, Escape y devolución de foco', async ({
   page,
 }) => {
   await page.goto('./')
   const projects = page.locator('#proyectos')
   await expect(projects.locator('.project-card')).toHaveCount(3)
+  await expect(projects.locator('.filter-pill')).toHaveCount(0)
+  await expect(projects.getByRole('button', { name: /^(Todos|Backend|Frontend|Full-Stack)$/i })).toHaveCount(0)
+  await expect(projects).not.toContainText(/Ilustración conceptual|Conceptual illustration/i)
 
-  await projects.getByRole('button', { name: 'Backend', exact: true }).click()
-  await expect(projects.locator('.project-card')).toHaveCount(1)
-  await expect(projects).toContainText('Mostrando 1 de 3 proyectos')
+  await projects.locator('.project-card').first().scrollIntoViewIfNeeded()
+  await expect(projects.locator('.project-card').first()).toHaveAttribute('data-revealed', 'true')
 
-  await projects.getByRole('button', { name: 'Todos', exact: true }).click()
   const detailBtn = projects.locator('.project-detail-btn').first()
   await detailBtn.click()
 

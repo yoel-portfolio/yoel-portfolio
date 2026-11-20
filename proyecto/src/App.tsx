@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react'
 import { content } from './content'
 import { cvConfig, missionVisionValues } from './data/portfolioData'
 import { translations, useLanguage, type Language } from './i18n'
@@ -6,6 +7,7 @@ import { SkillsSection } from './components/SkillsSection'
 import { ProjectsSection } from './components/ProjectsSection'
 import { ContactSection } from './components/ContactSection'
 import { FloatingActions } from './components/FloatingActions'
+import { useScrollReveal } from './useScrollReveal'
 import { useTheme } from './useTheme'
 
 const brandPath = `${import.meta.env.BASE_URL}brand/`
@@ -37,7 +39,7 @@ function Profile({ lang }: { lang: Language }) {
 
   return (
     <section id="perfil" aria-labelledby="profile-title" className="profile-section profile-section-full scroll-mt-8">
-      <div className="profile-top-grid">
+      <div className="profile-top-grid" data-reveal>
         <div>
           <p className="eyebrow section-eyebrow"><span aria-hidden="true">{t.eyebrowNum}</span> {t.eyebrowLabel}</p>
           <h2 id="profile-title">{t.title}</h2>
@@ -53,15 +55,15 @@ function Profile({ lang }: { lang: Language }) {
       </div>
 
       <div className="profile-mvv-grid">
-        <article className="mvv-card">
+        <article className="mvv-card" data-reveal style={{ '--reveal-delay': '0ms' } as CSSProperties}>
           <h3 className="mvv-title">{t.missionTitle}</h3>
           <p className="mvv-copy">{mvv.mission}</p>
         </article>
-        <article className="mvv-card">
+        <article className="mvv-card" data-reveal style={{ '--reveal-delay': '90ms' } as CSSProperties}>
           <h3 className="mvv-title">{t.visionTitle}</h3>
           <p className="mvv-copy">{mvv.vision}</p>
         </article>
-        <article className="mvv-card mvv-card-values">
+        <article className="mvv-card mvv-card-values" data-reveal style={{ '--reveal-delay': '150ms' } as CSSProperties}>
           <h3 className="mvv-title">{t.valuesTitle}</h3>
           <ul className="values-list">
             {mvv.values.map((val) => (
@@ -79,6 +81,7 @@ function Profile({ lang }: { lang: Language }) {
 export function App() {
   const { theme, toggleTheme } = useTheme()
   const { lang, setLang } = useLanguage()
+  useScrollReveal()
   const t = translations[lang]
   const activeCv = cvConfig[lang]
 
@@ -155,26 +158,11 @@ export function App() {
               {t.hero.titleMain} <span>{t.hero.titleHighlight}</span>
             </h1>
             <p className="hero-slogan">{t.hero.slogan}</p>
-            <p className="hero-description">{t.hero.announcement}</p>
 
-            <div className="hero-actions flex flex-wrap items-center">
-              <a className="primary-button inline-flex items-center" href={content.email.href}>
-                {t.hero.primaryCta} <Icon name="arrow" />
-              </a>
-              <a className="secondary-link inline-flex items-center" href="#perfil">
-                {t.hero.secondaryCta} <span aria-hidden="true">↓</span>
-              </a>
-            </div>
-
-            <div className="hero-extra-actions">
-              <a className="hero-projects-link" href="#proyectos">
-                <span>{t.hero.projectsCta}</span>
-                <Icon name="arrow" />
-              </a>
-
+            <div className="hero-actions hero-cv-actions flex flex-wrap items-center">
               {activeCv.available ? (
                 <a
-                  className="cv-control cv-control-ready"
+                  className="primary-button cv-control cv-control-ready inline-flex items-center"
                   href={`${import.meta.env.BASE_URL}${activeCv.path}`}
                   download
                 >
