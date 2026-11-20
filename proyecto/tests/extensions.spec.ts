@@ -218,11 +218,12 @@ test('habilidades técnicas arriba y personales abajo, sin ilustración conceptu
   const hero = page.locator('section.hero')
   await expect(hero.getByRole('link')).toHaveCount(1)
   await expect(hero.getByRole('link', { name: 'Descargar CV', exact: true })).toBeVisible()
-  await expect(hero.locator('.hero-description')).toHaveCount(0)
+  await expect(hero.locator('.hero-description')).toBeVisible()
 
   const skills = page.locator('#habilidades')
   await expect(skills.locator('.skill-card')).toHaveCount(5)
   await expect(skills.locator('.personal-skill-card')).toHaveCount(4)
+  await expect(skills.locator('.personal-skill-title').first()).toHaveText('Trabajo en equipo')
   await expect(skills.locator('.filter-pill')).toHaveCount(0)
   await expect(skills.locator('svg.arch-svg')).toHaveCount(0)
   await expect(skills.locator('.lottie-stage')).toHaveCount(0)
