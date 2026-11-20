@@ -218,7 +218,7 @@ test('habilidades técnicas arriba y personales abajo, sin ilustración conceptu
   const hero = page.locator('section.hero')
   await expect(hero.getByRole('link')).toHaveCount(1)
   await expect(hero.getByRole('link', { name: 'Descargar CV', exact: true })).toBeVisible()
-  await expect(hero.locator('.hero-description')).toHaveCount(0)
+  await expect(hero.locator('.hero-description')).toBeVisible()
 
   const skills = page.locator('#habilidades')
   await expect(skills.locator('.skill-card')).toHaveCount(5)

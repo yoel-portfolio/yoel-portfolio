@@ -158,6 +158,7 @@ export function App() {
               {t.hero.titleMain} <span>{t.hero.titleHighlight}</span>
             </h1>
             <p className="hero-slogan">{t.hero.slogan}</p>
+            <p className="hero-description">{t.hero.announcement}</p>
 
             <div className="hero-actions hero-cv-actions flex flex-wrap items-center">
               {activeCv.available ? (
