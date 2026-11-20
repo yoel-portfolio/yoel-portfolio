@@ -1,8 +1,10 @@
+import crypto from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { test, expect } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
+import { cvConfig } from '../src/data/portfolioData'
 
 const MOCK_CONTACT_ENDPOINT = 'https://contact-test.invalid/submit'
 const basePath = process.env.PLAYWRIGHT_BASE_PATH || '/'
@@ -112,6 +114,73 @@ test('selector de idioma ES/EN, persistencia y restauración exacta en español'
   await expect(page.locator('.profile-copy')).toHaveText(
     'Ingeniero de software con enfoque en desarrollo full-stack. Desarrollo aplicaciones con C#, Java y JavaScript, utilizando React, Angular, Node.js y Spring Boot. Trabajo con HTML, CSS y bases de datos PostgreSQL y MySQL, e integro Docker y CI/CD para facilitar la entrega de software.',
   )
+})
+
+const cvExpectations = {
+  es: { button: 'ES', readyLabel: 'Descargar CV', pendingLabel: 'CV en PDF (ES) — próximamente', file: 'cv-yoel-es.pdf' },
+  en: { button: 'EN', readyLabel: 'Download CV', pendingLabel: 'Resume PDF (EN) — coming soon', file: 'cv-yoel-en.pdf' },
+} as const
+
+test('CV: la configuración coincide con los PDF presentes en public/cv (sin enlaces rotos)', () => {
+  const hashes: string[] = []
+  for (const lang of ['es', 'en'] as const) {
+    const filePath = path.join(projectRootDir, 'public', cvConfig[lang].path)
+    expect(cvConfig[lang].path).toBe(`cv/${cvExpectations[lang].file}`)
+    // Solo se activa la descarga de un idioma si su PDF existe; si no, queda pendiente.
+    expect(cvConfig[lang].available, `available (${lang}) debe reflejar si existe ${filePath}`).toBe(fs.existsSync(filePath))
+    if (cvConfig[lang].available) {
+      const bytes = fs.readFileSync(filePath)
+      expect(bytes.subarray(0, 5).toString('latin1')).toBe('%PDF-')
+      hashes.push(crypto.createHash('sha256').update(bytes).digest('hex'))
+    }
+  }
+  if (hashes.length === 2) expect(hashes[0]).not.toBe(hashes[1])
+})
+
+test('CV: botón por idioma ES -> EN -> ES descarga el PDF correcto o muestra pendiente sin enlace', async ({
+  page,
+  baseURL,
+}) => {
+  await page.goto('./')
+  const hero = page.locator('section.hero')
+
+  for (const lang of ['es', 'en', 'es'] as const) {
+    const expected = cvExpectations[lang]
+    await page.getByRole('button', { name: expected.button, exact: true }).click()
+    await expect(page.locator('html')).toHaveAttribute('lang', lang)
+
+    if (!cvConfig[lang].available) {
+      await expect(hero.locator('a.cv-control-ready')).toHaveCount(0)
+      await expect(hero.locator('.cv-control')).toHaveText(expected.pendingLabel)
+      continue
+    }
+
+    const link = hero.getByRole('link', { name: expected.readyLabel, exact: true })
+    await expect(link).toBeVisible()
+    await expect(link).toHaveAttribute('download', '')
+    const expectedHref = `${basePath}cv/${expected.file}`
+    await expect(link).toHaveAttribute('href', expectedHref)
+
+    // El servidor debe entregar un PDF real, no la página HTML de respaldo con estado 200.
+    const response = await page.request.get(new URL(expectedHref, baseURL).toString())
+    expect(response.status()).toBe(200)
+    const contentType = response.headers()['content-type'] || ''
+    expect(contentType).toContain('application/pdf')
+    expect(contentType).not.toContain('text/html')
+    const body = await response.body()
+    expect(body.subarray(0, 5).toString('latin1')).toBe('%PDF-')
+    const localBytes = fs.readFileSync(path.join(projectRootDir, 'public', cvConfig[lang].path))
+    expect(crypto.createHash('sha256').update(body).digest('hex')).toBe(
+      crypto.createHash('sha256').update(localBytes).digest('hex'),
+    )
+
+    const [download] = await Promise.all([page.waitForEvent('download'), link.click()])
+    expect(download.suggestedFilename()).toBe(expected.file)
+    const downloadedPath = await download.path()
+    const downloaded = fs.readFileSync(downloadedPath)
+    expect(downloaded.subarray(0, 5).toString('latin1')).toBe('%PDF-')
+    expect(downloaded.equals(localBytes)).toBe(true)
+  }
 })
 
 test('filtros de habilidades, ilustración SVG y animación Lottie JSON real', async ({ page }) => {

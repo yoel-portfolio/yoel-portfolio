@@ -5,9 +5,9 @@ Este archivo registra con transparencia todo lo que falta o depende de configura
 ## 1. Archivos faltantes que debe aportar Yoel
 
 - **Currículum Vitae en PDF (ES y EN)**:
-  - Los CV aprobados en español e inglés todavía no están disponibles en el repositorio.
-  - Estado actual en `proyecto/`: las rutas preparadas son `proyecto/public/cv/cv-yoel-es.pdf` y `proyecto/public/cv/cv-yoel-en.pdf`, con `available: false` en `proyecto/src/data/portfolioData.ts` para evitar enlaces rotos (`404`).
-  - Acción necesaria: colocar ambos PDF aprobados en `proyecto/public/cv/` y cambiar `available: true` en `proyecto/src/data/portfolioData.ts`.
+  - Ninguno de los dos archivos (`cv-yoel-es.pdf` ni `cv-yoel-en.pdf`) llegó adjunto en el entorno (`/home/antigravity/upload/` solo contenía el `.zip` inicial).
+  - Estado actual en `proyecto/`: las rutas preparadas son `proyecto/public/cv/cv-yoel-es.pdf` y `proyecto/public/cv/cv-yoel-en.pdf`, con `available: false` en ambos idiomas dentro de `proyecto/src/data/portfolioData.ts` para evitar enlaces rotos o respuestas HTML 200. Las etiquetas (`Descargar CV` / `Download CV`) y las pruebas de Playwright ES/EN ya quedaron preparadas para validar los archivos reales.
+  - Acción necesaria: adjuntar nuevamente los dos PDF definitivos (`cv-yoel-es.pdf` en español y `cv-yoel-en.pdf` en inglés) para copiarlos sin modificar en `proyecto/public/cv/`, activar `available: true` y correr la verificación de descarga real en escritorio y móvil.
 
 ## 2. Configuración externa pendiente (Formulario de contacto)
 
