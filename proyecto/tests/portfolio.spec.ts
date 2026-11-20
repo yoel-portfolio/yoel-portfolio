@@ -13,7 +13,7 @@ for (const theme of ['light', 'dark'] as const) {
 
     await expect(page.locator('html')).toHaveAttribute('lang', 'es')
     await expect(page.locator('html')).toHaveAttribute('data-theme', theme)
-    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Portafolio en construcción')
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText('Ingeniero de software full-stack')
     await expect(page.getByRole('img', { name: 'Yoel', exact: true })).toHaveAttribute('src', new RegExp(`logo-yoel-${theme === 'dark' ? 'oscuro' : 'claro'}\\.svg$`))
     await expect(page.getByRole('link', { name: /Correo electrónico/ })).toHaveAttribute('href', 'mailto:yoerojas03@gmail.com')
     await expect(page.getByRole('link', { name: /WhatsApp/ })).toHaveAttribute('href', 'https://wa.me/50683904194')

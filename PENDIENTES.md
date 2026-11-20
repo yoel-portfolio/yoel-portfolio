@@ -9,16 +9,13 @@ Este archivo registra con transparencia todo lo que falta o depende de configura
   - Bloqueo actual: todavía no hay un endpoint externo autorizado configurado en `VITE_CONTACT_ENDPOINT` ni se ha ejecutado una prueba real de envío y recepción de correo.
   - Acción necesaria: facilitar el endpoint público de Formspree (`https://formspree.io/f/<id>`), comprobar la compilación con `VITE_CONTACT_ENDPOINT`, configurarlo en GitHub Actions Variables como `vars.VITE_CONTACT_ENDPOINT` (previsto en la Propuesta 1 de `propuestas/PROPUESTAS_AUTORIZACION.md`) y realizar una prueba real de recepción en `yoerojas03@gmail.com` únicamente cuando Yoel la autorice.
 
-## 2. Revisión del PR #1, aprobación de propuestas y publicación
+## 2. Fusión del PR #1, publicación y verificación en la URL pública
 
 - **Estado en GitHub**:
-  - La rama `feat/portafolio-final` y el Pull Request #1 (`https://github.com/yoel-portfolio/yoel-portfolio/pull/1`) hacia `codex/portafolio-base` **ya existen** y se mantienen abiertos sin fusionar (con ambos CV PDF ES/EN ya integrados y verificados).
-- **Pendiente de aprobación explícita de Yoel**:
-  - Revisar y aprobar el PR #1.
-  - Decidir cuándo activar las propuestas de `propuestas/PROPUESTAS_AUTORIZACION.md`:
-    1. Actualizar `.github/workflows/deploy.yml` para compilar `proyecto/` con `--base=/yoel-portfolio/` y `VITE_CONTACT_ENDPOINT: ${{ vars.VITE_CONTACT_ENDPOINT }}`.
-    2. Retirar el aviso «Portafolio en construcción» y actualizar los metadatos para la salida a producción.
-  - Fusionar en `codex/portafolio-base` para disparar la publicación en GitHub Pages y validar la URL pública `https://yoel-portfolio.github.io/yoel-portfolio/`.
+  - La rama `feat/portafolio-final` y el Pull Request #1 (`https://github.com/yoel-portfolio/yoel-portfolio/pull/1`) hacia `codex/portafolio-base` **ya están listos para publicación** (ambos CV PDF ES/EN integrados, `.github/workflows/deploy.yml` actualizado para compilar `proyecto/` con `vars.VITE_CONTACT_ENDPOINT`, y aviso «en construcción» retirado junto con metadatos y pruebas ES/EN). El PR permanece abierto **sin fusionar ni publicar**.
+- **Pendiente de aprobación final de Yoel**:
+  - Fusionar el PR #1 en `codex/portafolio-base` para disparar el workflow de GitHub Pages.
+  - Verificar en la URL pública `https://yoel-portfolio.github.io/yoel-portfolio/` la carga general, ambas descargas de CV PDF (ES/EN) y el formulario (con `VITE_CONTACT_ENDPOINT` una vez configurado).
 
 ## 3. Entregables del estudiante y evaluación docente (no acreditables automáticamente)
 

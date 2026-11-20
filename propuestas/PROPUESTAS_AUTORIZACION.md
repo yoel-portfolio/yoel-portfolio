@@ -1,14 +1,14 @@
-# Propuestas separadas pendientes de autorización de Yoel
+# Propuestas autorizadas y aplicadas en el PR #1
 
-Este documento contiene los cambios sobre archivos o textos **protegidos** de la base que **NO** fueron activados automáticamente. Requieren revisión y autorización explícita de Yoel antes de fusionar o publicar.
+> **Estado actual**: Yoel autorizó explícitamente ambas propuestas para preparar la publicación en el PR #1 (`feat/portafolio-final` → `codex/portafolio-base`). Ya fueron aplicadas en la rama de trabajo; el PR sigue abierto **sin fusionar ni publicar** hasta la aprobación final.
 
 ---
 
-## Propuesta 1: Ajuste de `.github/workflows/deploy.yml` para compilar `proyecto/`
+## Propuesta 1: Ajuste de `.github/workflows/deploy.yml` para compilar `proyecto/` (**Aplicada**)
 
-El workflow original en `.github/workflows/deploy.yml` permanece intacto y se dispara únicamente en `push` a `codex/portafolio-base` o mediante `workflow_dispatch`. No se ha modificado ni ejecutado.
+El workflow `.github/workflows/deploy.yml` fue actualizado con el parche exacto indicado abajo (se dispara únicamente en `push` a `codex/portafolio-base` o mediante `workflow_dispatch`, por lo que subir commits a `feat/portafolio-final` no dispara despliegue automático).
 
-Cuando Yoel autorice publicar la ampliación contenida en `proyecto/`, se propone actualizar `.github/workflows/deploy.yml` usando `working-directory: proyecto`, inyectando `VITE_CONTACT_ENDPOINT` desde las variables de GitHub Actions (`vars.VITE_CONTACT_ENDPOINT`) en el paso de compilación y manteniendo la URL pública `/yoel-portfolio/` sin incluir el nombre `proyecto/` en la ruta:
+Usa `working-directory: proyecto`, inyecta `VITE_CONTACT_ENDPOINT` desde las variables de GitHub Actions (`vars.VITE_CONTACT_ENDPOINT`) en el paso de compilación y mantiene la URL pública `/yoel-portfolio/` sin incluir el nombre `proyecto/` en la ruta:
 
 ```diff
 --- a/.github/workflows/deploy.yml
@@ -49,11 +49,9 @@ Cuando Yoel autorice publicar la ampliación contenida en `proyecto/`, se propon
 
 ---
 
-## Propuesta 2: Retirada del aviso «en construcción» y actualización de metadatos
+## Propuesta 2: Retirada del aviso «en construcción» y actualización de metadatos (**Aplicada**)
 
-En `proyecto/index.html` y `proyecto/src/i18n.ts` se conservaron intactos los textos protegidos actuales (`Portafolio en construcción`, `UN NUEVO ESPACIO, EN CAMINO` y los metadatos originales).
-
-Una vez que Yoel y ChatGPT aprueben el contenido completo (y se adjunten los CV PDF si aplica), se propone este reemplazo de salida a producción:
+Con autorización explícita de Yoel, se reemplazaron en `proyecto/index.html`, `proyecto/src/i18n.ts`, `proyecto/tests/portfolio.spec.ts` y `proyecto/tests/extensions.spec.ts` los textos temporales (`Portafolio en construcción`, `UN NUEVO ESPACIO, EN CAMINO` y equivalentes en inglés) por la versión de publicación:
 
 ### 2.1 `proyecto/index.html`
 
@@ -62,10 +60,12 @@ Una vez que Yoel y ChatGPT aprueben el contenido completo (y se adjunten los CV 
 - `og:title`: `Yoel | Portafolio profesional`
 - `og:description`: `Ingeniero de software con enfoque en desarrollo full-stack: Java, Spring Boot, React, TypeScript, PostgreSQL y Docker.`
 
-### 2.2 `proyecto/src/i18n.ts` (Inicio)
+### 2.2 `proyecto/src/i18n.ts` (Inicio y metadatos dinámicos)
 
+- `meta.title` (ES): `Yoel | Ingeniero de software full-stack` (EN: `Yoel | Full-Stack Software Engineer`)
+- `meta.description` / `og:title` / `og:description`: actualizados dinámicamente en ES y EN al alternar idioma.
 - `hero.statusBadge` (ES): `DISPONIBLE PARA OPORTUNIDADES` (EN: `OPEN TO OPPORTUNITIES`)
 - `hero.titleMain` / `hero.titleHighlight` (ES): `Ingeniero de software` / `full-stack` (EN: `Full-stack` / `software engineer`)
 - `hero.announcement` (ES): `Diseño y construyo aplicaciones web mantenibles en frontend y backend, con bases de datos relacionales e integración continua.` (EN: `I design and build maintainable frontend and backend web applications with relational databases and continuous integration.`)
 
-> Nota: Si se aprueba esta Propuesta 2, deberá actualizarse la aserción correspondiente en `proyecto/tests/portfolio.spec.ts` (`h1` igual al nuevo título aprobado) únicamente con autorización expresa de Yoel.
+> Nota: Las aserciones correspondientes en `proyecto/tests/portfolio.spec.ts` (`h1`) y `proyecto/tests/extensions.spec.ts` (título, metadatos, insignia y ausencia de textos «en construcción» en ES/EN) quedaron actualizadas y verificadas.

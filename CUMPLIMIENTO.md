@@ -19,12 +19,12 @@ Estado honesto de la ampliación implementada en `proyecto/` y entregables asoci
 | 13 | Elementos interactivos | 1 | Completo | Selector de tema claro/oscuro, selector ES/EN, filtros de habilidades/proyectos, modal accesible de ficha, panel WhatsApp, formulario y control de Lottie. |
 | 14 | Animación web JSON | 1 | Completo | `proyecto/public/animations/fullstack-flow.json` (Lottie 5.7.4) reproducido con `lottie-web` (`lottie_light`) en `LottieWorkflow.tsx`, con botón Reproducir/Pausar y alternativa estática ante movimiento reducido. |
 | 15 | Exposición | 2 | Pendiente | Responsabilidad exclusiva del estudiante en la fecha docente; guía breve incluida en `entregables/portafolio.txt`. |
-| 16 | Enlace remoto | 1 | Parcial (pendiente de autorización y publicación) | `proyecto/vite.config.ts` y las 42 pruebas validan `/yoel-portfolio/` localmente; el workflow `.github/workflows/deploy.yml` no se modificó ni publicó sin permiso (parche verificado con `git apply --check` en `propuestas/PROPUESTAS_AUTORIZACION.md`). |
+| 16 | Enlace remoto | 1 | Parcial (workflow preparado en PR #1; pendiente de fusión y verificación pública) | `.github/workflows/deploy.yml` ya fue actualizado con autorización de Yoel para compilar `proyecto/` bajo `/yoel-portfolio/` con `vars.VITE_CONTACT_ENDPOINT` y subir `proyecto/dist`, y las 42 pruebas pasan localmente; falta fusionar el PR #1 para publicar en `https://yoel-portfolio.github.io/yoel-portfolio/` y validar la URL pública. |
 | 17 | Imagen promocional | 2 | Completo | Generada con IA en `entregables/promo.png` (1376×768 PNG) con paleta de identidad y URL exacta legible `https://yoel-portfolio.github.io/yoel-portfolio/` sin alterar el logo SVG oficial. |
 | 18 | Criterio del docente | 5 | Pendiente | Evaluación exclusiva del profesor; nunca acreditada automáticamente. |
 
 ## Condiciones adicionales (página 5 de la guía)
 - Enfoque laboral full-stack mantenido; cero tarifas, paquetes freelance, métricas ficticias o niveles de dominio inventados.
-- Código completo de la ampliación contenido en `proyecto/`, conservando intactos todos los archivos originales de la raíz.
-- Propuestas de ajuste para `.github/workflows/deploy.yml` (con `vars.VITE_CONTACT_ENDPOINT`) y retirada del aviso «en construcción» separadas en `propuestas/PROPUESTAS_AUTORIZACION.md`.
-- El proyecto **no** se declara al 100 % ni publicado mientras falten la configuración y prueba real de recepción de `VITE_CONTACT_ENDPOINT`, la aprobación y fusión del PR #1 para publicar en GitHub Pages, la exposición y la evaluación docente.
+- Código completo de la ampliación contenido en `proyecto/`, conservando intactos todos los archivos originales de la aplicación base en la raíz.
+- Las dos propuestas de `propuestas/PROPUESTAS_AUTORIZACION.md` (`.github/workflows/deploy.yml` con `vars.VITE_CONTACT_ENDPOINT` y retirada del aviso «en construcción» con metadatos/pruebas ES/EN) ya fueron autorizadas por Yoel y aplicadas en el PR #1.
+- El proyecto **no** se declara al 100 % ni publicado mientras falten la configuración y prueba real de recepción de `VITE_CONTACT_ENDPOINT`, la fusión del PR #1 para publicar y validar en GitHub Pages, la exposición y la evaluación docente.

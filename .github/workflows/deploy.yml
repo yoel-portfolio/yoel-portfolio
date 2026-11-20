@@ -27,13 +27,20 @@ jobs:
         with:
           node-version: '24'
           cache: npm
+          cache-dependency-path: proyecto/package-lock.json
       - name: Instalar dependencias
+        working-directory: proyecto
         run: npm ci
       - name: Compilar para la subruta de Pages
+        working-directory: proyecto
+        env:
+          VITE_CONTACT_ENDPOINT: ${{ vars.VITE_CONTACT_ENDPOINT }}
         run: npm run build -- --base=/yoel-portfolio/
       - name: Instalar Chromium para las verificaciones
+        working-directory: proyecto
         run: npx playwright install --with-deps chromium
       - name: Verificar escritorio, móvil y recursos bajo la subruta
+        working-directory: proyecto
         run: npm test
         env:
           PLAYWRIGHT_BASE_PATH: /yoel-portfolio/
@@ -42,7 +49,7 @@ jobs:
       - name: Subir el sitio compilado
         uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
         with:
-          path: dist
+          path: proyecto/dist
 
   deploy:
     name: Publicar

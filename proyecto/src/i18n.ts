@@ -24,6 +24,8 @@ export function useLanguage() {
     document.documentElement.lang = lang
     document.title = translations[lang].meta.title
     document.querySelector('meta[name="description"]')?.setAttribute('content', translations[lang].meta.description)
+    document.querySelector('meta[property="og:title"]')?.setAttribute('content', translations[lang].meta.ogTitle)
+    document.querySelector('meta[property="og:description"]')?.setAttribute('content', translations[lang].meta.ogDescription)
     document.querySelector('meta[property="og:locale"]')?.setAttribute('content', lang === 'es' ? 'es_CR' : 'en_US')
   }, [lang])
 
@@ -52,8 +54,10 @@ export function useLanguage() {
 export const translations = {
   es: {
     meta: {
-      title: 'Yoel | Portafolio en construcción',
-      description: 'Soy Yoel, ingeniero de software con enfoque en desarrollo full-stack. Conocé mi perfil y contactame. Mis proyectos estarán disponibles próximamente.',
+      title: 'Yoel | Ingeniero de software full-stack',
+      description: 'Soy Yoel Alexander Rojas Arguedas, ingeniero de software full-stack. Conocé mi perfil, habilidades técnicas, proyectos y medios de contacto.',
+      ogTitle: 'Yoel | Portafolio profesional',
+      ogDescription: 'Ingeniero de software con enfoque en desarrollo full-stack: Java, Spring Boot, React, TypeScript, PostgreSQL y Docker.',
     },
     skipLink: 'Saltar al contenido',
     header: {
@@ -71,12 +75,12 @@ export const translations = {
       themeToDark: 'Activar modo oscuro',
     },
     hero: {
-      statusBadge: 'UN NUEVO ESPACIO, EN CAMINO',
+      statusBadge: 'DISPONIBLE PARA OPORTUNIDADES',
       greetingPrefix: 'Hola, soy ',
-      titleMain: 'Portafolio',
-      titleHighlight: 'en construcción',
+      titleMain: 'Ingeniero de software',
+      titleHighlight: 'full-stack',
       slogan: 'Código que impulsa ideas',
-      announcement: 'Pronto vas a encontrar acá mis proyectos y las ideas que estoy convirtiendo en software.',
+      announcement: 'Diseño y construyo aplicaciones web mantenibles en frontend y backend, con bases de datos relacionales e integración continua.',
       primaryCta: 'Conversemos',
       secondaryCta: 'Conocé mi perfil',
       projectsCta: 'Ver proyectos',
@@ -187,8 +191,10 @@ export const translations = {
   },
   en: {
     meta: {
-      title: 'Yoel | Portfolio Under Construction',
-      description: 'I am Yoel, a software engineer focused on full-stack development. Explore my profile, skills, projects, and contact details.',
+      title: 'Yoel | Full-Stack Software Engineer',
+      description: 'I am Yoel Alexander Rojas Arguedas, a full-stack software engineer. Explore my profile, technical skills, projects, and contact details.',
+      ogTitle: 'Yoel | Professional Portfolio',
+      ogDescription: 'Software engineer focused on full-stack development: Java, Spring Boot, React, TypeScript, PostgreSQL, and Docker.',
     },
     skipLink: 'Skip to content',
     header: {
@@ -206,12 +212,12 @@ export const translations = {
       themeToDark: 'Switch to dark mode',
     },
     hero: {
-      statusBadge: 'A NEW SPACE, ON THE WAY',
+      statusBadge: 'OPEN TO OPPORTUNITIES',
       greetingPrefix: "Hi, I'm ",
-      titleMain: 'Portfolio',
-      titleHighlight: 'under construction',
+      titleMain: 'Full-stack',
+      titleHighlight: 'software engineer',
       slogan: 'Code that drives ideas',
-      announcement: 'Soon you will find my projects here along with the ideas I am turning into software.',
+      announcement: 'I design and build maintainable frontend and backend web applications with relational databases and continuous integration.',
       primaryCta: "Let's talk",
       secondaryCta: 'View my profile',
       projectsCta: 'Explore projects',

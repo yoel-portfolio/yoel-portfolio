@@ -101,16 +101,45 @@ test('compilación pública no expone ganchos de prueba para sustituir el destin
 test('selector de idioma ES/EN, persistencia y restauración exacta en español', async ({ page }) => {
   await page.goto('./')
   await expect(page.locator('html')).toHaveAttribute('lang', 'es')
+  await expect(page).toHaveTitle('Yoel | Ingeniero de software full-stack')
+  await expect(page.locator('meta[name="description"]')).toHaveAttribute(
+    'content',
+    'Soy Yoel Alexander Rojas Arguedas, ingeniero de software full-stack. Conocé mi perfil, habilidades técnicas, proyectos y medios de contacto.',
+  )
+  await expect(page.locator('meta[property="og:title"]')).toHaveAttribute('content', 'Yoel | Portafolio profesional')
+  await expect(page.locator('meta[property="og:description"]')).toHaveAttribute(
+    'content',
+    'Ingeniero de software con enfoque en desarrollo full-stack: Java, Spring Boot, React, TypeScript, PostgreSQL y Docker.',
+  )
+  await expect(page.locator('section.hero .status-badge')).toContainText('DISPONIBLE PARA OPORTUNIDADES')
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Ingeniero de software full-stack')
+  await expect(page.locator('body')).not.toContainText(/en construcción|en camino/i)
+
   await page.getByRole('button', { name: 'EN', exact: true }).click()
   await expect(page.locator('html')).toHaveAttribute('lang', 'en')
-  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Portfolio under construction')
+  await expect(page).toHaveTitle('Yoel | Full-Stack Software Engineer')
+  await expect(page.locator('meta[name="description"]')).toHaveAttribute(
+    'content',
+    'I am Yoel Alexander Rojas Arguedas, a full-stack software engineer. Explore my profile, technical skills, projects, and contact details.',
+  )
+  await expect(page.locator('meta[property="og:title"]')).toHaveAttribute('content', 'Yoel | Professional Portfolio')
+  await expect(page.locator('meta[property="og:description"]')).toHaveAttribute(
+    'content',
+    'Software engineer focused on full-stack development: Java, Spring Boot, React, TypeScript, PostgreSQL, and Docker.',
+  )
+  await expect(page.locator('section.hero .status-badge')).toContainText('OPEN TO OPPORTUNITIES')
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Full-stack software engineer')
+  await expect(page.locator('body')).not.toContainText(/under construction|on the way/i)
   await expect(page.locator('#habilidades h2')).toHaveText('Technical and Personal Skills')
   expect(await page.evaluate(() => localStorage.getItem('yoel-lang'))).toBe('en')
 
   await page.reload()
   await expect(page.locator('html')).toHaveAttribute('lang', 'en')
+  await expect(page).toHaveTitle('Yoel | Full-Stack Software Engineer')
   await page.getByRole('button', { name: 'ES', exact: true }).click()
   await expect(page.locator('html')).toHaveAttribute('lang', 'es')
+  await expect(page).toHaveTitle('Yoel | Ingeniero de software full-stack')
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Ingeniero de software full-stack')
   await expect(page.locator('.profile-copy')).toHaveText(
     'Ingeniero de software con enfoque en desarrollo full-stack. Desarrollo aplicaciones con C#, Java y JavaScript, utilizando React, Angular, Node.js y Spring Boot. Trabajo con HTML, CSS y bases de datos PostgreSQL y MySQL, e integro Docker y CI/CD para facilitar la entrega de software.',
   )
