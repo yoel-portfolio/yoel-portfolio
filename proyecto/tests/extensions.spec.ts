@@ -1,15 +1,28 @@
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { test, expect } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
 
 const MOCK_CONTACT_ENDPOINT = 'https://contact-test.invalid/submit'
+const basePath = process.env.PLAYWRIGHT_BASE_PATH || '/'
+const isPublishedRun = Boolean(process.env.PLAYWRIGHT_BASE_URL)
+const UNCONFIGURED_TEST_URL = `http://127.0.0.1:4174${basePath}`
+const CONFIGURED_TEST_URL = `http://127.0.0.1:4175${basePath}`
+const projectRootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 
 test.beforeEach(async ({ page, baseURL }) => {
-  const allowedOrigin = baseURL ? new URL(baseURL).origin : 'http://127.0.0.1:4173'
+  const allowedOrigins = new Set<string>([
+    baseURL ? new URL(baseURL).origin : 'http://127.0.0.1:4173',
+    'http://127.0.0.1:4174',
+    'http://127.0.0.1:4175',
+  ])
+
   // Bloquea cualquier envío o petición externa real aunque el entorno tenga VITE_CONTACT_ENDPOINT.
   await page.route('**/*', async (route) => {
     const request = route.request()
     const origin = new URL(request.url()).origin
-    if (origin === allowedOrigin && request.method() === 'GET') {
+    if (allowedOrigins.has(origin) && request.method() === 'GET') {
       await route.continue()
       return
     }
@@ -36,6 +49,51 @@ test('cinco secciones, misión/visión/valores, GitHub y ausencia de 6ta secció
   const github = page.locator('#contacto').getByRole('link', { name: /GitHub/ })
   await expect(github).toHaveAttribute('href', 'https://github.com/yoel-portfolio/yoel-portfolio')
   await expect(github).toHaveAttribute('target', '_blank')
+})
+
+test('compilación pública no expone ganchos de prueba para sustituir el destino del formulario', async ({ page }) => {
+  const scriptBodies: string[] = []
+  page.on('response', async (response) => {
+    if (response.request().resourceType() === 'script' && response.ok()) {
+      scriptBodies.push(await response.text())
+    }
+  })
+
+  let hijackedRequests = 0
+  await page.route('https://hijack-test.invalid/**', async (route) => {
+    hijackedRequests += 1
+    await route.abort('blockedbyclient')
+  })
+
+  await page.addInitScript(() => {
+    ;(window as unknown as Record<string, unknown>).__YOEL_TEST_CONTACT_ENDPOINT__ =
+      'https://hijack-test.invalid/steal'
+  })
+
+  await page.goto('./')
+  expect(scriptBodies.length).toBeGreaterThan(0)
+  for (const scriptText of scriptBodies) {
+    expect(scriptText).not.toContain('__YOEL_TEST_CONTACT_ENDPOINT__')
+  }
+
+  if (!isPublishedRun) {
+    const distAssetsDir = path.join(projectRootDir, 'dist', 'assets')
+    const jsFiles = fs.readdirSync(distAssetsDir).filter((file) => file.endsWith('.js'))
+    expect(jsFiles.length).toBeGreaterThan(0)
+    for (const file of jsFiles) {
+      const content = fs.readFileSync(path.join(distAssetsDir, file), 'utf8')
+      expect(content).not.toContain('__YOEL_TEST_CONTACT_ENDPOINT__')
+      expect(content).not.toContain('contact-test.invalid')
+    }
+  }
+
+  const form = page.locator('#contacto form')
+  await form.getByLabel('Nombre completo').fill('Ana Pérez')
+  await form.getByLabel('Correo electrónico').fill('ana@example.com')
+  await form.getByLabel('Mensaje').fill('Mensaje de prueba para comprobar que el destino no es alterable.')
+  await form.getByRole('button', { name: 'Enviar mensaje' }).click()
+
+  expect(hijackedRequests).toBe(0)
 })
 
 test('selector de idioma ES/EN, persistencia y restauración exacta en español', async ({ page }) => {
@@ -172,16 +230,14 @@ test('formulario bilingüe: traduce errores visibles ES -> EN -> ES sin borrar d
 })
 
 test('formulario sin endpoint: validación y aviso natural sin simular éxito ni enviar peticiones', async ({ page }) => {
-  await page.addInitScript(() => {
-    window.__YOEL_TEST_CONTACT_ENDPOINT__ = ''
-  })
+  test.skip(isPublishedRun, 'Solo aplica al servidor local de pruebas sin endpoint.')
 
   let postAttempts = 0
   page.on('request', (request) => {
     if (request.method() === 'POST') postAttempts += 1
   })
 
-  await page.goto('./')
+  await page.goto(UNCONFIGURED_TEST_URL)
   const form = page.locator('#contacto form')
   await form.getByRole('button', { name: 'Enviar mensaje' }).click()
   await expect(form.locator('.form-error')).toHaveCount(3)
@@ -200,12 +256,10 @@ test('formulario sin endpoint: validación y aviso natural sin simular éxito ni
   expect(postAttempts).toBe(0)
 })
 
-test('formulario con endpoint: fallo HTTP conserva el mensaje y permite reintentar hasta respuesta válida', async ({
+test('formulario con endpoint: fallo HTTP conserva el mensaje y permite reintentar hasta confirmación válida', async ({
   page,
 }) => {
-  await page.addInitScript((endpoint) => {
-    window.__YOEL_TEST_CONTACT_ENDPOINT__ = endpoint
-  }, MOCK_CONTACT_ENDPOINT)
+  test.skip(isPublishedRun, 'Solo aplica al servidor local de pruebas con endpoint simulado.')
 
   let attempts = 0
   let lastPayload: Record<string, string> | null = null
@@ -236,7 +290,7 @@ test('formulario con endpoint: fallo HTTP conserva el mensaje y permite reintent
     })
   })
 
-  await page.goto('./')
+  await page.goto(CONFIGURED_TEST_URL)
   const form = page.locator('#contacto form')
   const typedMessage = 'Hola Yoel, nos interesa conversar sobre una vacante full-stack.'
 
@@ -258,7 +312,7 @@ test('formulario con endpoint: fallo HTTP conserva el mensaje y permite reintent
   await expect(form.getByRole('button', { name: 'Enviando...' })).toBeDisabled()
   await expect(form.locator('.form-feedback-success')).toHaveCount(0)
 
-  // Solo muestra éxito tras recibir HTTP 200 válido
+  // Solo muestra éxito tras recibir HTTP 200 con { ok: true }
   releaseSecondAttempt()
   await expect(form.locator('.form-feedback-success')).toBeVisible()
   await expect(form).toContainText('Mensaje enviado correctamente.')
@@ -274,34 +328,62 @@ test('formulario con endpoint: fallo HTTP conserva el mensaje y permite reintent
   })
 })
 
-test('formulario con endpoint: respuesta JSON inválida (ok: false) nunca muestra éxito y conserva datos', async ({
-  page,
-}) => {
-  await page.addInitScript((endpoint) => {
-    window.__YOEL_TEST_CONTACT_ENDPOINT__ = endpoint
-  }, MOCK_CONTACT_ENDPOINT)
+const unexpectedHttp200Cases = [
+  {
+    name: 'página HTML',
+    contentType: 'text/html; charset=utf-8',
+    body: '<!doctype html><html><body><h1>OK</h1></body></html>',
+  },
+  {
+    name: 'JSON mal formado',
+    contentType: 'application/json; charset=utf-8',
+    body: '{ "ok": true',
+  },
+  {
+    name: 'JSON sin confirmación explícita ({})',
+    contentType: 'application/json; charset=utf-8',
+    body: '{}',
+  },
+  {
+    name: 'JSON sin confirmación válida ({ ok: false })',
+    contentType: 'application/json; charset=utf-8',
+    body: JSON.stringify({ ok: false }),
+  },
+] as const
 
-  await page.route(MOCK_CONTACT_ENDPOINT, async (route) => {
-    await route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({ ok: false }),
+for (const scenario of unexpectedHttp200Cases) {
+  test(`formulario con endpoint: HTTP 200 inesperado (${scenario.name}) rechaza confirmación y conserva datos`, async ({
+    page,
+  }) => {
+    test.skip(isPublishedRun, 'Solo aplica al servidor local de pruebas con endpoint simulado.')
+
+    await page.route(MOCK_CONTACT_ENDPOINT, async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: scenario.contentType,
+        body: scenario.body,
+      })
     })
+
+    await page.goto(CONFIGURED_TEST_URL)
+    const form = page.locator('#contacto form')
+    const typedName = 'Carlos Soto'
+    const typedEmail = 'carlos@example.com'
+    const typedMessage = `Mensaje de prueba para respuesta inesperada (${scenario.name}).`
+
+    await form.getByLabel('Nombre completo').fill(typedName)
+    await form.getByLabel('Correo electrónico').fill(typedEmail)
+    await form.getByLabel('Mensaje').fill(typedMessage)
+    await form.getByRole('button', { name: 'Enviar mensaje' }).click()
+
+    await expect(form.locator('.form-feedback-error')).toBeVisible()
+    await expect(form.locator('.form-feedback-success')).toHaveCount(0)
+    await expect(form).not.toContainText('Mensaje enviado correctamente')
+    await expect(form.getByLabel('Nombre completo')).toHaveValue(typedName)
+    await expect(form.getByLabel('Correo electrónico')).toHaveValue(typedEmail)
+    await expect(form.getByLabel('Mensaje')).toHaveValue(typedMessage)
   })
-
-  await page.goto('./')
-  const form = page.locator('#contacto form')
-  const typedMessage = 'Mensaje de prueba para validar respuestas con ok en falso.'
-
-  await form.getByLabel('Nombre completo').fill('Carlos Soto')
-  await form.getByLabel('Correo electrónico').fill('carlos@example.com')
-  await form.getByLabel('Mensaje').fill(typedMessage)
-  await form.getByRole('button', { name: 'Enviar mensaje' }).click()
-
-  await expect(form.locator('.form-feedback-error')).toBeVisible()
-  await expect(form.locator('.form-feedback-success')).toHaveCount(0)
-  await expect(form.getByLabel('Mensaje')).toHaveValue(typedMessage)
-})
+}
 
 test('WhatsApp flotante, scrolltop y accesibilidad sin solapamiento', async ({ page }) => {
   await page.goto('./')

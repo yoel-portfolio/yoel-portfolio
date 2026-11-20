@@ -17,13 +17,8 @@ interface FormValues {
   honeypot?: string
 }
 
-declare global {
-  interface Window {
-    __YOEL_TEST_CONTACT_ENDPOINT__?: string | null
-  }
-}
-
-const buildContactEndpoint = (import.meta.env.VITE_CONTACT_ENDPOINT as string | undefined)?.trim() || ''
+const contactEndpoint = (import.meta.env.VITE_CONTACT_ENDPOINT as string | undefined)?.trim() || ''
+const JSON_CONTENT_TYPE_RE = /^application\/(?:[a-z0-9.+-]+\+)?json\b/i
 
 const contactSchema = z.object({
   name: z.string().trim().min(2, 'validationNameRequired'),
@@ -32,11 +27,26 @@ const contactSchema = z.object({
   honeypot: z.string().optional(),
 })
 
-function resolveContactEndpoint(): string {
-  if (typeof window !== 'undefined' && typeof window.__YOEL_TEST_CONTACT_ENDPOINT__ === 'string') {
-    return window.__YOEL_TEST_CONTACT_ENDPOINT__.trim()
+async function isConfirmedFormResponse(response: Response): Promise<boolean> {
+  if (!response.ok) return false
+
+  const contentType = response.headers.get('content-type')?.trim() ?? ''
+  if (!JSON_CONTENT_TYPE_RE.test(contentType)) return false
+
+  let data: unknown
+  try {
+    data = await response.json()
+  } catch {
+    return false
   }
-  return buildContactEndpoint
+
+  if (!data || typeof data !== 'object' || Array.isArray(data)) return false
+
+  const payload = data as { ok?: unknown; errors?: unknown }
+  if (Array.isArray(payload.errors) && payload.errors.length > 0) return false
+
+  // Contrato JSON de Formspree con Accept: application/json ({ "ok": true }).
+  return payload.ok === true
 }
 
 export function ContactSection({ lang }: { lang: Language }) {
@@ -69,8 +79,7 @@ export function ContactSection({ lang }: { lang: Language }) {
   async function onSubmit(values: FormValues) {
     if (values.honeypot) return
 
-    const endpoint = resolveContactEndpoint()
-    if (!endpoint) {
+    if (!contactEndpoint) {
       // Nunca simular envío exitoso cuando falta configurar el endpoint real.
       setSubmitState('unconfigured')
       return
@@ -78,7 +87,7 @@ export function ContactSection({ lang }: { lang: Language }) {
 
     setSubmitState('submitting')
     try {
-      const response = await fetch(endpoint, {
+      const response = await fetch(contactEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -91,26 +100,10 @@ export function ContactSection({ lang }: { lang: Language }) {
         }),
       })
 
-      if (!response.ok) {
+      const confirmed = await isConfirmedFormResponse(response)
+      if (!confirmed) {
         setSubmitState('error')
         return
-      }
-
-      const contentType = response.headers.get('content-type') || ''
-      if (contentType.includes('application/json')) {
-        const data: unknown = await response.json().catch(() => null)
-        if (
-          data &&
-          typeof data === 'object' &&
-          (('ok' in data && (data as { ok?: unknown }).ok === false) ||
-            ('success' in data && (data as { success?: unknown }).success === false) ||
-            ('errors' in data &&
-              Array.isArray((data as { errors?: unknown }).errors) &&
-              (data as { errors: unknown[] }).errors.length > 0))
-        ) {
-          setSubmitState('error')
-          return
-        }
       }
 
       setSubmitState('success')

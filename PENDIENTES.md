@@ -12,9 +12,9 @@ Este archivo registra con transparencia todo lo que falta o depende de configura
 ## 2. Configuración externa pendiente (Formulario de contacto)
 
 - **Endpoint autorizado (`VITE_CONTACT_ENDPOINT`) y prueba real de recepción**:
-  - El comportamiento del formulario (`react-hook-form` + `zod`, traducción inmediata `ES ↔ EN` de errores visibles, manejo de fallos conservando los datos para reintento y confirmación de éxito únicamente tras respuesta HTTP válida) fue verificado en Playwright con **respuestas HTTP interceptadas/simuladas** y bloqueo de peticiones externas.
+  - El comportamiento del formulario (`react-hook-form` + `zod`, traducción inmediata `ES ↔ EN` de errores visibles, rechazo de respuestas inesperadas como HTTP 200 HTML, JSON mal formado o JSON sin confirmación conservando los datos para reintento, y confirmación exclusiva del contrato JSON de Formspree `{ "ok": true }`) fue verificado en Playwright con **respuestas HTTP interceptadas/simuladas** y bloqueo de peticiones externas.
   - Bloqueo actual: todavía no hay un endpoint externo autorizado configurado en `VITE_CONTACT_ENDPOINT` ni se ha ejecutado una prueba real de envío y recepción de correo.
-  - Acción necesaria: crear o facilitar el endpoint público (por ejemplo Formspree o Web3Forms), configurarlo en GitHub Actions Variables como `vars.VITE_CONTACT_ENDPOINT` (previsto en la Propuesta 1 de `propuestas/PROPUESTAS_AUTORIZACION.md`) y realizar una prueba real confirmando la recepción en `yoerojas03@gmail.com`.
+  - Acción necesaria: crear o facilitar el endpoint público de Formspree (`https://formspree.io/f/<id>`), configurarlo en GitHub Actions Variables como `vars.VITE_CONTACT_ENDPOINT` (previsto en la Propuesta 1 de `propuestas/PROPUESTAS_AUTORIZACION.md`) y realizar una prueba real confirmando la recepción en `yoerojas03@gmail.com`.
 
 ## 3. Revisión del PR #1, aprobación de propuestas y publicación
 

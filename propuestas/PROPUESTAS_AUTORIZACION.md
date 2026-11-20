@@ -13,7 +13,7 @@ Cuando Yoel autorice publicar la ampliación contenida en `proyecto/`, se propon
 ```diff
 --- a/.github/workflows/deploy.yml
 +++ b/.github/workflows/deploy.yml
-@@ -27,19 +27,26 @@ jobs:
+@@ -27,13 +27,20 @@
          with:
            node-version: '24'
            cache: npm
@@ -34,13 +34,15 @@ Cuando Yoel autorice publicar la ampliación contenida en `proyecto/`, se propon
          run: npm test
          env:
            PLAYWRIGHT_BASE_PATH: /yoel-portfolio/
-       - name: Leer la configuración de Pages
-         uses: actions/configure-pages@45bfe0192ca1faeb007ade9deae92b16b8254a0d # v6
+@@ -42,7 +49,7 @@
        - name: Subir el sitio compilado
          uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5
          with:
 -          path: dist
 +          path: proyecto/dist
+ 
+   deploy:
+     name: Publicar
 ```
 
 > Nota: Si la variable de repositorio `VITE_CONTACT_ENDPOINT` aún no está definida en GitHub Actions, `${{ vars.VITE_CONTACT_ENDPOINT }}` se evalúa como cadena vacía y la compilación continúa sin fallar, manteniendo el formulario en estado pendiente (el envío real de mensajes queda pendiente hasta configurar un endpoint autorizado). Las pruebas automáticas (`npm test`) nunca contactan servicios externos aunque la variable esté definida.

@@ -34,24 +34,27 @@ PLAYWRIGHT_BASE_PATH=/yoel-portfolio/ npm test
 | --- | --- | --- |
 | Auditoría Git de archivos originales | `git diff codex/portafolio-base -- index.html src public docs tests package.json package-lock.json playwright.config.ts tsconfig.json vite.config.ts README.md .gitignore .github` | **Aprobada** (salida vacía: ningún archivo original de `codex/portafolio-base` modificado). |
 | Integridad SHA-256 de marca | `sha256sum public/brand/* proyecto/public/brand/* docs/identidad/favicon-* proyecto/docs/identidad/favicon-* docs/identidad/logo-* proyecto/docs/identidad/logo-*` | **Aprobada** — coincidencia byte a byte en los 4 archivos (`favicon-yoel-32.png`: `85deac2b...`, `favicon-yoel.svg`: `d8aa4222...`, `logo-yoel-claro.svg`: `a9334abd...`, `logo-yoel-oscuro.svg`: `9be85e59...`). |
-| Compilación TypeScript + Vite (`/yoel-portfolio/`) | `npm run build -- --base=/yoel-portfolio/` | **Aprobada** (`tsc --noEmit` sin errores; `vite build` generó `dist/` con 131 módulos transformados en 803 ms). |
-| Pruebas Playwright + axe-core (`/yoel-portfolio/`) | `PLAYWRIGHT_BASE_PATH=/yoel-portfolio/ npm test` | **30 / 30 pruebas aprobadas** (`30 passed (56.2s)`) en proyectos `escritorio` (1440×1050) y `movil` (iPhone 13, 390×844). |
+| Validez del parche de despliegue | `awk '/^\`\`\`diff$/{flag=1;next}/^\`\`\`$/{flag=0}flag' propuestas/PROPUESTAS_AUTORIZACION.md \| git apply --check -` | **Aprobada** (`exit 0`, aplica limpiamente sobre `.github/workflows/deploy.yml` sin activarlo ni modificarlo). |
+| Compilación TypeScript + Vite (`/yoel-portfolio/`) | `npm run build -- --base=/yoel-portfolio/` | **Aprobada** (`tsc --noEmit` sin errores; `vite build` generó `dist/` con 131 módulos transformados en 712 ms). |
+| Auditoría de bundle publicado (`dist/`) | `grep -rn "__YOEL_TEST_CONTACT_ENDPOINT__\|contact-test\.invalid" dist/` | **Aprobada** (0 coincidencias; ningún gancho de prueba presente en el código publicado). |
+| Pruebas Playwright + axe-core (`/yoel-portfolio/`) | `PLAYWRIGHT_BASE_PATH=/yoel-portfolio/ npm test` | **38 / 38 pruebas aprobadas** (`38 passed (1.3m)`) en proyectos `escritorio` (1440×1050) y `movil` (iPhone 13, 390×844). |
 
-### Detalle de las 30 pruebas ejecutadas
+### Detalle de las 38 pruebas ejecutadas
 - **Suite base intacta (`tests/portfolio.spec.ts`, 12 pruebas — 6 escritorio + 6 móvil)**:
   - Contenido protegido exacto en español, logo claro/oscuro, enlaces correo/WhatsApp/LinkedIn, 4 pesos locales de fuente (`Montserrat 600/700`, `Roboto 400/500`), recursos relativos a `/yoel-portfolio/`, cero errores de consola/HTTP, cero violaciones `axe-core` WCAG 2 A/AA y 2.1 AA.
   - Selector de tema por teclado (`Space` / `Enter`), persistencia en `localStorage`, almacenamiento bloqueado, anclas reales, salto al contenido, `prefers-reduced-motion: reduce`, sin desbordamiento horizontal en 320 / 768 / 1024 / 1440 px ni con texto ampliado al 200 % en 390 px.
-- **Suite de ampliación (`tests/extensions.spec.ts`, 18 pruebas — 9 escritorio + 9 móvil)**:
+- **Suite de ampliación (`tests/extensions.spec.ts`, 26 pruebas — 13 escritorio + 13 móvil)**:
   - Presencia exacta de 5 `<section>` en `<main>` (sin sexta sección), Misión/Visión/Valores dentro de `#perfil`, enlace visible a GitHub (`https://github.com/yoel-portfolio/yoel-portfolio`) y ausencia de jerga técnica interna (`VITE_CONTACT_ENDPOINT`, «alojamiento estático», «métricas ni demos ficticias») en la interfaz.
+  - Verificación del bundle publicado (`dist/` y scripts servidos en `4173`): ausencia total de `__YOEL_TEST_CONTACT_ENDPOINT__` y `contact-test.invalid`, y confirmación de que asignar esa propiedad global en el navegador no altera ni desvía el envío del formulario.
   - Selector de idioma `ES/EN`, actualización de `<html lang>`, persistencia en `yoel-lang` y restauración exacta del texto protegido en español.
   - Filtros de `#habilidades`, ilustración vectorial SVG (`svg.arch-svg`), reproducción real de Lottie JSON (`lottie-web` `lottie_light` renderizando SVG en `.lottie-stage`) y control Play/Pause.
   - Filtros de `#proyectos`, conteo accesible, apertura de modal (`role="dialog"`), fondo inactivo (`#root[inert]` + `aria-hidden="true"` + bloqueo de scroll), foco atrapado recorriendo el modal con `Tab` y `Shift+Tab` en ambas direcciones, cierre con `Escape` y devolución verificada del foco al botón origen.
   - Formulario bilingüe `ES → EN → ES` con un error visible y datos ingresados: traduce el error al instante en ambos sentidos sin borrar los valores escritos ni mostrar errores nuevos en campos no validados.
-  - Formulario **sin endpoint** (caso separado): validación de campos, aviso natural sin mostrar éxito simulado, datos conservados y 0 peticiones `POST`.
-  - Formulario **con endpoint simulado** (respuestas HTTP interceptadas localmente con `page.route`, sin contactar servicios externos):
+  - Formulario **sin endpoint** (servidor aislado en `--mode test`, puerto `4174`): validación de campos, aviso natural sin mostrar éxito simulado, datos conservados y 0 peticiones `POST`.
+  - Formulario **con endpoint simulado** (servidor aislado en `--mode test`, puerto `4175`, respuestas HTTP interceptadas con `page.route` sin contactar servicios externos):
     - Fallo HTTP 500 conserva todos los datos escritos y muestra aviso de error para permitir reintentar.
-    - Reintento con respuesta diferida confirma que no muestra éxito antes de recibir HTTP 200 `{ ok: true }`; al confirmarse, muestra éxito y limpia los campos.
-    - Respuesta HTTP 200 con `{ ok: false }` nunca muestra éxito y conserva el mensaje escrito.
+    - Reintento con respuesta diferida confirma que no muestra éxito antes de recibir HTTP 200 con `Content-Type: application/json` y `{ "ok": true }` (contrato de Formspree); al confirmarse, muestra éxito y limpia los campos.
+    - Cuatro casos de **HTTP 200 inesperado** rechazados sin mostrar éxito y conservando todos los datos escritos: página HTML (`text/html`), JSON mal formado (`{ "ok": true`), JSON sin confirmación explícita (`{}`) y JSON con `{ "ok": false }`.
   - Visibilidad de Scrolltop al desplazarse, ausencia de solapamiento de cajas (`boundingBox`) con el botón flotante de WhatsApp, panel editable con enlace `wa.me/50683904194?text=...` y cero violaciones `axe-core`.
 
 > **Distinción importante (simulado vs. real)**: las pruebas del formulario con endpoint validan el comportamiento del cliente frente a respuestas HTTP **interceptadas/simuladas** por Playwright (`page.route`) y bloquean explícitamente cualquier petición real hacia Internet. **No** sustituyen una prueba real de recepción de correo con un servicio autorizado.
