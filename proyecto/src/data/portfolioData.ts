@@ -106,7 +106,7 @@ export const technicalSkills: TechnicalSkillItem[] = [
 export const personalSkills: Array<{ id: string; title: Record<Language, string>; description: Record<Language, string> }> = [
   {
     id: 'teamwork',
-    title: { es: 'Trabajo en equipo y escucha', en: 'Teamwork and active listening' },
+    title: { es: 'Trabajo en equipo', en: 'Teamwork' },
     description: {
       es: 'colaborar y considerar las ideas de los demás.',
       en: 'collaborate effectively and value teammates’ perspectives.',
