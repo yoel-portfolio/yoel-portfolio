@@ -6,14 +6,14 @@ Este documento contiene los cambios sobre archivos o textos **protegidos** de la
 
 ## Propuesta 1: Ajuste de `.github/workflows/deploy.yml` para compilar `proyecto/`
 
-El workflow original en `.github/workflows/deploy.yml` permanece intacto y se dispara únicamente en `push` a `codex/portafolio-base` o mediante `workflow_dispatch`.
+El workflow original en `.github/workflows/deploy.yml` permanece intacto y se dispara únicamente en `push` a `codex/portafolio-base` o mediante `workflow_dispatch`. No se ha modificado ni ejecutado.
 
-Cuando Yoel autorice publicar la ampliación contenida en `proyecto/`, se propone actualizar `.github/workflows/deploy.yml` usando `working-directory: proyecto` (manteniendo la URL pública `/yoel-portfolio/` sin incluir el nombre `proyecto/` en la ruta):
+Cuando Yoel autorice publicar la ampliación contenida en `proyecto/`, se propone actualizar `.github/workflows/deploy.yml` usando `working-directory: proyecto`, inyectando `VITE_CONTACT_ENDPOINT` desde las variables de GitHub Actions (`vars.VITE_CONTACT_ENDPOINT`) en el paso de compilación y manteniendo la URL pública `/yoel-portfolio/` sin incluir el nombre `proyecto/` en la ruta:
 
 ```diff
 --- a/.github/workflows/deploy.yml
 +++ b/.github/workflows/deploy.yml
-@@ -27,19 +27,23 @@ jobs:
+@@ -27,19 +27,26 @@ jobs:
          with:
            node-version: '24'
            cache: npm
@@ -23,6 +23,8 @@ Cuando Yoel autorice publicar la ampliación contenida en `proyecto/`, se propon
          run: npm ci
        - name: Compilar para la subruta de Pages
 +        working-directory: proyecto
++        env:
++          VITE_CONTACT_ENDPOINT: ${{ vars.VITE_CONTACT_ENDPOINT }}
          run: npm run build -- --base=/yoel-portfolio/
        - name: Instalar Chromium para las verificaciones
 +        working-directory: proyecto
@@ -40,6 +42,8 @@ Cuando Yoel autorice publicar la ampliación contenida en `proyecto/`, se propon
 -          path: dist
 +          path: proyecto/dist
 ```
+
+> Nota: Si la variable de repositorio `VITE_CONTACT_ENDPOINT` aún no está definida en GitHub Actions, `${{ vars.VITE_CONTACT_ENDPOINT }}` se evalúa como cadena vacía y la compilación continúa sin fallar, manteniendo el formulario en estado pendiente (el envío real de mensajes queda pendiente hasta configurar un endpoint autorizado). Las pruebas automáticas (`npm test`) nunca contactan servicios externos aunque la variable esté definida.
 
 ---
 

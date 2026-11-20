@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -8,6 +8,7 @@ import { translations, type Language } from '../i18n'
 import { Icon } from './Icon'
 
 type SubmissionState = 'idle' | 'submitting' | 'success' | 'error' | 'unconfigured'
+type ValidationKey = 'validationNameRequired' | 'validationEmailInvalid' | 'validationMessageRequired'
 
 interface FormValues {
   name: string
@@ -16,22 +17,31 @@ interface FormValues {
   honeypot?: string
 }
 
-const contactEndpoint = (import.meta.env.VITE_CONTACT_ENDPOINT as string | undefined)?.trim() || ''
+declare global {
+  interface Window {
+    __YOEL_TEST_CONTACT_ENDPOINT__?: string | null
+  }
+}
+
+const buildContactEndpoint = (import.meta.env.VITE_CONTACT_ENDPOINT as string | undefined)?.trim() || ''
+
+const contactSchema = z.object({
+  name: z.string().trim().min(2, 'validationNameRequired'),
+  email: z.string().trim().email('validationEmailInvalid'),
+  message: z.string().trim().min(10, 'validationMessageRequired'),
+  honeypot: z.string().optional(),
+})
+
+function resolveContactEndpoint(): string {
+  if (typeof window !== 'undefined' && typeof window.__YOEL_TEST_CONTACT_ENDPOINT__ === 'string') {
+    return window.__YOEL_TEST_CONTACT_ENDPOINT__.trim()
+  }
+  return buildContactEndpoint
+}
 
 export function ContactSection({ lang }: { lang: Language }) {
   const t = translations[lang].contact
   const [submitState, setSubmitState] = useState<SubmissionState>('idle')
-
-  const schema = useMemo(
-    () =>
-      z.object({
-        name: z.string().trim().min(2, t.validationNameRequired),
-        email: z.string().trim().email(t.validationEmailInvalid),
-        message: z.string().trim().min(10, t.validationMessageRequired),
-        honeypot: z.string().optional(),
-      }),
-    [t.validationEmailInvalid, t.validationMessageRequired, t.validationNameRequired],
-  )
 
   const {
     register,
@@ -39,14 +49,28 @@ export function ContactSection({ lang }: { lang: Language }) {
     reset,
     formState: { errors },
   } = useForm<FormValues>({
-    resolver: zodResolver(schema),
+    resolver: zodResolver(contactSchema),
+    mode: 'onTouched',
     defaultValues: { name: '', email: '', message: '', honeypot: '' },
   })
+
+  function getValidationMessage(message: string | undefined): string | undefined {
+    if (!message) return undefined
+    if (
+      message === 'validationNameRequired' ||
+      message === 'validationEmailInvalid' ||
+      message === 'validationMessageRequired'
+    ) {
+      return t[message as ValidationKey]
+    }
+    return message
+  }
 
   async function onSubmit(values: FormValues) {
     if (values.honeypot) return
 
-    if (!contactEndpoint) {
+    const endpoint = resolveContactEndpoint()
+    if (!endpoint) {
       // Nunca simular envío exitoso cuando falta configurar el endpoint real.
       setSubmitState('unconfigured')
       return
@@ -54,7 +78,7 @@ export function ContactSection({ lang }: { lang: Language }) {
 
     setSubmitState('submitting')
     try {
-      const response = await fetch(contactEndpoint, {
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -70,6 +94,23 @@ export function ContactSection({ lang }: { lang: Language }) {
       if (!response.ok) {
         setSubmitState('error')
         return
+      }
+
+      const contentType = response.headers.get('content-type') || ''
+      if (contentType.includes('application/json')) {
+        const data: unknown = await response.json().catch(() => null)
+        if (
+          data &&
+          typeof data === 'object' &&
+          (('ok' in data && (data as { ok?: unknown }).ok === false) ||
+            ('success' in data && (data as { success?: unknown }).success === false) ||
+            ('errors' in data &&
+              Array.isArray((data as { errors?: unknown }).errors) &&
+              (data as { errors: unknown[] }).errors.length > 0))
+        ) {
+          setSubmitState('error')
+          return
+        }
       }
 
       setSubmitState('success')
@@ -158,7 +199,7 @@ export function ContactSection({ lang }: { lang: Language }) {
               />
               {errors.name && (
                 <p id="contact-name-error" role="alert" className="form-error">
-                  {errors.name.message}
+                  {getValidationMessage(errors.name.message)}
                 </p>
               )}
             </div>
@@ -177,7 +218,7 @@ export function ContactSection({ lang }: { lang: Language }) {
               />
               {errors.email && (
                 <p id="contact-email-error" role="alert" className="form-error">
-                  {errors.email.message}
+                  {getValidationMessage(errors.email.message)}
                 </p>
               )}
             </div>
@@ -195,7 +236,7 @@ export function ContactSection({ lang }: { lang: Language }) {
               />
               {errors.message && (
                 <p id="contact-message-error" role="alert" className="form-error">
-                  {errors.message.message}
+                  {getValidationMessage(errors.message.message)}
                 </p>
               )}
             </div>

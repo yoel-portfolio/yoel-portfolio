@@ -1,9 +1,22 @@
 import { useEffect, useRef, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { verifiedProjects, type ProjectCategory, type VerifiedProject } from '../data/portfolioData'
 import { translations, type Language } from '../i18n'
 import { Icon } from './Icon'
 
 type ProjectFilter = 'all' | ProjectCategory
+
+const FOCUSABLE_SELECTOR =
+  'a[href], area[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+
+function getFocusableElements(container: HTMLElement): HTMLElement[] {
+  return Array.from(container.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)).filter(
+    (element) =>
+      !element.hasAttribute('disabled') &&
+      element.getAttribute('aria-hidden') !== 'true' &&
+      element.getClientRects().length > 0,
+  )
+}
 
 function ProjectConceptualSvg({ project, tag, lang }: { project: VerifiedProject; tag: string; lang: Language }) {
   return (
@@ -33,34 +46,104 @@ export function ProjectsSection({ lang }: { lang: Language }) {
   const [selectedProject, setSelectedProject] = useState<VerifiedProject | null>(null)
   const triggerButtonRef = useRef<HTMLButtonElement | null>(null)
   const closeButtonRef = useRef<HTMLButtonElement | null>(null)
+  const modalRef = useRef<HTMLDivElement | null>(null)
+  const shouldRestoreFocusRef = useRef(false)
   const t = translations[lang].projects
 
   const filtered = filter === 'all' ? verifiedProjects : verifiedProjects.filter((p) => p.category === filter)
 
   useEffect(() => {
-    if (!selectedProject) return
-    closeButtonRef.current?.focus()
+    if (!selectedProject) {
+      if (shouldRestoreFocusRef.current) {
+        shouldRestoreFocusRef.current = false
+        triggerButtonRef.current?.focus()
+      }
+      return
+    }
+
+    const appRoot = document.getElementById('root')
+    const previousInert = appRoot?.inert ?? false
+    const previousAriaHidden = appRoot?.getAttribute('aria-hidden') ?? null
+    const previousOverflow = document.body.style.overflow
+
+    if (appRoot) {
+      appRoot.inert = true
+      appRoot.setAttribute('aria-hidden', 'true')
+    }
+    document.body.style.overflow = 'hidden'
+
+    const focusTarget = closeButtonRef.current ?? modalRef.current
+    focusTarget?.focus()
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         event.preventDefault()
         closeModal()
+        return
+      }
+
+      if (event.key === 'Tab') {
+        const container = modalRef.current
+        if (!container) return
+        const focusables = getFocusableElements(container)
+        if (focusables.length === 0) {
+          event.preventDefault()
+          container.focus()
+          return
+        }
+
+        const first = focusables[0]
+        const last = focusables[focusables.length - 1]
+        const active = document.activeElement as HTMLElement | null
+
+        if (event.shiftKey) {
+          if (!active || active === first || !container.contains(active)) {
+            event.preventDefault()
+            last.focus()
+          }
+        } else if (!active || active === last || !container.contains(active)) {
+          event.preventDefault()
+          first.focus()
+        }
       }
     }
+
+    const handleFocusIn = (event: FocusEvent) => {
+      const container = modalRef.current
+      const target = event.target as Node | null
+      if (container && target && !container.contains(target)) {
+        const focusables = getFocusableElements(container)
+        ;(focusables[0] ?? container).focus()
+      }
+    }
+
     window.addEventListener('keydown', handleKeyDown)
-    return () => window.removeEventListener('keydown', handleKeyDown)
+    document.addEventListener('focusin', handleFocusIn)
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+      document.removeEventListener('focusin', handleFocusIn)
+      if (appRoot) {
+        appRoot.inert = previousInert
+        if (previousAriaHidden === null) {
+          appRoot.removeAttribute('aria-hidden')
+        } else {
+          appRoot.setAttribute('aria-hidden', previousAriaHidden)
+        }
+      }
+      document.body.style.overflow = previousOverflow
+    }
   }, [selectedProject])
 
   function openModal(project: VerifiedProject, buttonElement: HTMLButtonElement) {
     triggerButtonRef.current = buttonElement
+    shouldRestoreFocusRef.current = false
     setSelectedProject(project)
   }
 
   function closeModal() {
+    shouldRestoreFocusRef.current = true
     setSelectedProject(null)
-    requestAnimationFrame(() => {
-      triggerButtonRef.current?.focus()
-    })
   }
 
   return (
@@ -145,86 +228,90 @@ export function ProjectsSection({ lang }: { lang: Language }) {
         ))}
       </div>
 
-      {selectedProject && (
-        <div
-          className="project-modal-backdrop"
-          onClick={(event) => {
-            if (event.target === event.currentTarget) closeModal()
-          }}
-        >
+      {selectedProject &&
+        createPortal(
           <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="project-modal-title"
-            className="project-modal"
+            className="project-modal-backdrop"
+            onClick={(event) => {
+              if (event.target === event.currentTarget) closeModal()
+            }}
           >
-            <div className="project-modal-header">
-              <div>
-                <p className="eyebrow">{t.eyebrowLabel}</p>
-                <h3 id="project-modal-title" className="project-modal-title">
-                  {selectedProject.title[lang]}
-                </h3>
+            <div
+              ref={modalRef}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="project-modal-title"
+              tabIndex={-1}
+              className="project-modal"
+            >
+              <div className="project-modal-header">
+                <div>
+                  <p className="eyebrow">{t.eyebrowLabel}</p>
+                  <h3 id="project-modal-title" className="project-modal-title">
+                    {selectedProject.title[lang]}
+                  </h3>
+                </div>
+                <button
+                  ref={closeButtonRef}
+                  type="button"
+                  className="modal-close-btn"
+                  aria-label={t.modalCloseAria}
+                  onClick={closeModal}
+                >
+                  <Icon name="close" />
+                </button>
               </div>
-              <button
-                ref={closeButtonRef}
-                type="button"
-                className="modal-close-btn"
-                aria-label={t.modalCloseAria}
-                onClick={closeModal}
-              >
-                <Icon name="close" />
-              </button>
-            </div>
 
-            <div className="project-modal-body">
-              <ProjectConceptualSvg project={selectedProject} tag={t.conceptualTag} lang={lang} />
-              <p className="project-modal-desc">{selectedProject.description[lang]}</p>
+              <div className="project-modal-body">
+                <ProjectConceptualSvg project={selectedProject} tag={t.conceptualTag} lang={lang} />
+                <p className="project-modal-desc">{selectedProject.description[lang]}</p>
 
-              <div className="project-modal-block">
-                <p className="project-modal-label">{t.modalHighlightsLabel}</p>
-                <ul className="project-highlights">
-                  {selectedProject.highlights[lang].map((item) => (
-                    <li key={item}>{item}</li>
+                <div className="project-modal-block">
+                  <p className="project-modal-label">{t.modalHighlightsLabel}</p>
+                  <ul className="project-highlights">
+                    {selectedProject.highlights[lang].map((item) => (
+                      <li key={item}>{item}</li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="project-modal-block">
+                  <p className="project-modal-label">{t.participationLabel}</p>
+                  <p className="project-modal-text">{selectedProject.participation[lang]}</p>
+                </div>
+
+                <div className="project-modal-block">
+                  <p className="project-modal-label">{t.statusLabel}</p>
+                  <p className="project-modal-text">{selectedProject.status[lang]}</p>
+                </div>
+
+                <ul className="project-tech-list">
+                  {selectedProject.technologies.map((tech) => (
+                    <li key={tech}>{tech}</li>
                   ))}
                 </ul>
               </div>
 
-              <div className="project-modal-block">
-                <p className="project-modal-label">{t.participationLabel}</p>
-                <p className="project-modal-text">{selectedProject.participation[lang]}</p>
+              <div className="project-modal-footer">
+                <a
+                  className="primary-button inline-flex items-center"
+                  href={selectedProject.repoUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <Icon name="github" />
+                  <span>{t.repoLink}</span>
+                  <span className="sr-only">{t.newTabSr}</span>
+                  <Icon name="arrow" />
+                </a>
+                <button type="button" className="project-detail-btn" onClick={closeModal}>
+                  {t.modalClose}
+                </button>
               </div>
-
-              <div className="project-modal-block">
-                <p className="project-modal-label">{t.statusLabel}</p>
-                <p className="project-modal-text">{selectedProject.status[lang]}</p>
-              </div>
-
-              <ul className="project-tech-list">
-                {selectedProject.technologies.map((tech) => (
-                  <li key={tech}>{tech}</li>
-                ))}
-              </ul>
             </div>
-
-            <div className="project-modal-footer">
-              <a
-                className="primary-button inline-flex items-center"
-                href={selectedProject.repoUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <Icon name="github" />
-                <span>{t.repoLink}</span>
-                <span className="sr-only">{t.newTabSr}</span>
-                <Icon name="arrow" />
-              </a>
-              <button type="button" className="project-detail-btn" onClick={closeModal}>
-                {t.modalClose}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+          </div>,
+          document.body,
+        )}
     </section>
   )
 }
