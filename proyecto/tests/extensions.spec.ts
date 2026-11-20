@@ -369,8 +369,12 @@ test('formulario con endpoint: fallo HTTP conserva el mensaje y permite reintent
 
   await page.route(MOCK_CONTACT_ENDPOINT, async (route) => {
     attempts += 1
-    const bodyText = route.request().postData() || '{}'
-    lastPayload = JSON.parse(bodyText) as Record<string, string>
+    const request = route.request()
+    const contentType = request.headers()['content-type'] ?? ''
+    const formData = await new Response(new Uint8Array(request.postDataBuffer() ?? []), {
+      headers: { 'Content-Type': contentType },
+    }).formData()
+    lastPayload = Object.fromEntries([...formData].map(([key, value]) => [key, String(value)]))
 
     if (attempts === 1) {
       await route.fulfill({
@@ -425,6 +429,40 @@ test('formulario con endpoint: fallo HTTP conserva el mensaje y permite reintent
     email: 'ana@example.com',
     message: typedMessage,
   })
+})
+
+test('formulario con endpoint: tiempo de espera conserva los datos y no reenvía automáticamente', async ({ page }) => {
+  test.skip(isPublishedRun, 'Solo aplica al servidor local de pruebas con endpoint simulado.')
+
+  await page.clock.install()
+  let releaseResponse!: () => void
+  const responseGate = new Promise<void>((resolve) => { releaseResponse = resolve })
+  let attempts = 0
+  await page.route(MOCK_CONTACT_ENDPOINT, async (route) => {
+    attempts += 1
+    await responseGate
+    await route.abort().catch(() => {})
+  })
+
+  try {
+    await page.goto(CONFIGURED_TEST_URL)
+    const form = page.locator('#contacto form')
+    const typedMessage = 'Mensaje de prueba para comprobar el límite de espera.'
+    await form.getByLabel('Nombre completo').fill('Ana Pérez')
+    await form.getByLabel('Correo electrónico').fill('ana@example.com')
+    await form.getByLabel('Mensaje').fill(typedMessage)
+    await form.getByRole('button', { name: 'Enviar mensaje' }).click()
+    await expect.poll(() => attempts).toBe(1)
+    await expect(form.getByRole('button', { name: 'Enviando...' })).toBeDisabled()
+
+    await page.clock.fastForward(13_000)
+    await expect(form.getByRole('alert')).toContainText('No pudimos confirmar el envío.')
+    await expect(form.getByLabel('Mensaje')).toHaveValue(typedMessage)
+    await expect(form.getByRole('button', { name: 'Enviar mensaje' })).toBeEnabled()
+    expect(attempts).toBe(1)
+  } finally {
+    releaseResponse()
+  }
 })
 
 const unexpectedHttp200Cases = [

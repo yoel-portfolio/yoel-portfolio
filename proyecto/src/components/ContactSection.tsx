@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -7,7 +7,7 @@ import { githubProfile } from '../data/portfolioData'
 import { translations, type Language } from '../i18n'
 import { Icon } from './Icon'
 
-type SubmissionState = 'idle' | 'submitting' | 'success' | 'error' | 'unconfigured'
+type SubmissionState = 'idle' | 'submitting' | 'success' | 'error' | 'unconfirmed' | 'unconfigured'
 type ValidationKey = 'validationNameRequired' | 'validationEmailInvalid' | 'validationMessageRequired'
 
 interface FormValues {
@@ -18,6 +18,7 @@ interface FormValues {
 }
 
 const contactEndpoint = (import.meta.env.VITE_CONTACT_ENDPOINT as string | undefined)?.trim() || ''
+const SUBMISSION_TIMEOUT_MS = 12_000
 const JSON_CONTENT_TYPE_RE = /^application\/(?:[a-z0-9.+-]+\+)?json\b/i
 
 const contactSchema = z.object({
@@ -52,6 +53,7 @@ async function isConfirmedFormResponse(response: Response): Promise<boolean> {
 export function ContactSection({ lang }: { lang: Language }) {
   const t = translations[lang].contact
   const [submitState, setSubmitState] = useState<SubmissionState>('idle')
+  const submissionPending = useRef(false)
 
   const {
     register,
@@ -77,7 +79,7 @@ export function ContactSection({ lang }: { lang: Language }) {
   }
 
   async function onSubmit(values: FormValues) {
-    if (values.honeypot) return
+    if (values.honeypot || submissionPending.current) return
 
     if (!contactEndpoint) {
       // Nunca simular envío exitoso cuando falta configurar el endpoint real.
@@ -85,31 +87,37 @@ export function ContactSection({ lang }: { lang: Language }) {
       return
     }
 
+    const body = new FormData()
+    body.set('name', values.name)
+    body.set('email', values.email)
+    body.set('message', values.message)
+
+    const controller = new AbortController()
+    const timeout = window.setTimeout(() => controller.abort(), SUBMISSION_TIMEOUT_MS)
+    submissionPending.current = true
     setSubmitState('submitting')
     try {
       const response = await fetch(contactEndpoint, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'application/json',
-        },
-        body: JSON.stringify({
-          name: values.name,
-          email: values.email,
-          message: values.message,
-        }),
+        headers: { Accept: 'application/json' },
+        // El navegador genera Content-Type con el boundary de FormData.
+        body,
+        signal: controller.signal,
       })
 
       const confirmed = await isConfirmedFormResponse(response)
       if (!confirmed) {
-        setSubmitState('error')
+        setSubmitState(controller.signal.aborted ? 'unconfirmed' : 'error')
         return
       }
 
       setSubmitState('success')
       reset()
     } catch {
-      setSubmitState('error')
+      setSubmitState('unconfirmed')
+    } finally {
+      window.clearTimeout(timeout)
+      submissionPending.current = false
     }
   }
 
@@ -250,10 +258,10 @@ export function ContactSection({ lang }: { lang: Language }) {
               </div>
             )}
 
-            {submitState === 'error' && (
+            {(submitState === 'error' || submitState === 'unconfirmed') && (
               <div role="alert" className="form-feedback form-feedback-error">
                 <Icon name="alert" />
-                <p>{t.sendError}</p>
+                <p>{submitState === 'unconfirmed' ? t.sendUnconfirmed : t.sendError}</p>
               </div>
             )}
 

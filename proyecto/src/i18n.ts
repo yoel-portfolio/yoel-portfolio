@@ -171,6 +171,7 @@ export const translations = {
       endpointPendingBody: 'Por ahora podés escribirme por correo o WhatsApp.',
       sendSuccess: 'Mensaje enviado correctamente. Gracias por contactarme; te responderé pronto.',
       sendError: 'No se pudo enviar tu mensaje en este momento. Intentá de nuevo o escribime a yoerojas03@gmail.com.',
+      sendUnconfirmed: 'No pudimos confirmar el envío. También podés contactarme por correo o WhatsApp.',
     },
     floating: {
       scrollTopAria: 'Volver arriba',
@@ -308,6 +309,7 @@ export const translations = {
       endpointPendingBody: 'For now, you can reach me directly by email or WhatsApp.',
       sendSuccess: 'Message sent successfully. Thank you for reaching out; I will reply soon.',
       sendError: 'Your message could not be sent right now. Please try again or email yoerojas03@gmail.com.',
+      sendUnconfirmed: 'We couldn’t confirm that your message was sent. You can also reach me by email or WhatsApp.',
     },
     floating: {
       scrollTopAria: 'Back to top',

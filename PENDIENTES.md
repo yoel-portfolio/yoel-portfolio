@@ -6,8 +6,8 @@ Este archivo registra con transparencia todo lo que falta o depende de configura
 
 - **Endpoint autorizado (`VITE_CONTACT_ENDPOINT`) y prueba real de recepción**:
   - El comportamiento del formulario (`react-hook-form` + `zod`, traducción inmediata `ES ↔ EN` de errores visibles, rechazo de respuestas inesperadas como HTTP 200 HTML, JSON mal formado o JSON sin confirmación conservando los datos para reintento, y confirmación exclusiva del contrato JSON de Formspree `{ "ok": true }`) fue verificado en Playwright con **respuestas HTTP interceptadas/simuladas** y bloqueo de peticiones externas.
-  - Bloqueo actual: todavía no hay un endpoint externo autorizado configurado en `VITE_CONTACT_ENDPOINT` ni se ha ejecutado una prueba real de envío y recepción de correo.
-  - Acción necesaria: facilitar el endpoint público de Formspree (`https://formspree.io/f/<id>`), comprobar la compilación con `VITE_CONTACT_ENDPOINT`, configurarlo en GitHub Actions Variables como `vars.VITE_CONTACT_ENDPOINT` (previsto en la Propuesta 1 de `propuestas/PROPUESTAS_AUTORIZACION.md`) y realizar una prueba real de recepción en `yoerojas03@gmail.com` únicamente cuando Yoel la autorice.
+  - Yoel facilitó el endpoint y confirmó que guardó `VITE_CONTACT_ENDPOINT` en GitHub Actions. La compilación local con ese endpoint funciona; el primer intento real no recibió una respuesta HTTP y la entrega sigue sin confirmarse.
+  - Acción necesaria: revisar la lista de envíos de Formspree y la bandeja de destino. La integración React usa `FormData` con espera limitada y sin reenvíos automáticos. Confirmar la recepción de la versión ajustada mediante una única prueba nueva solo cuando Yoel la autorice.
 
 ## 2. Fusión del PR #1, publicación y verificación en la URL pública
 
