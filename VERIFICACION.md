@@ -1,8 +1,8 @@
 # Verificación de la ampliación (`proyecto/`)
 
 ## 1. Herramientas comprobadas en el entorno
-- **Disponibles**: terminal (`Node.js v24.22.2`, `npm 11.21.2`, `git 2.39.5`, `gh 2.103.3`), repositorio Git en rama `feat/portafolio-final` (PR #1 abierto hacia `codex/portafolio-base`, commit base preservado `b7f3183`), compilación Vite/TypeScript, navegador headless Chromium (`/usr/bin/chromium`), Playwright + `@axe-core/playwright` y entregables (`entregables/portafolio.txt`, `entregables/promo.png`).
-- **No disponibles**: archivos CV PDF ES/EN aprobados (`cv-yoel-es.pdf` y `cv-yoel-en.pdf` no adjuntados); endpoint externo autorizado (`VITE_CONTACT_ENDPOINT`) para pruebas reales de envío/recepción de correos.
+- **Disponibles**: terminal (`Node.js v24.22.2`, `npm 11.21.2`, `git 2.39.5`, `gh 2.103.3`), repositorio Git en rama `feat/portafolio-final` (PR #1 abierto hacia `codex/portafolio-base`, commit base preservado `b7f3183`), compilación Vite/TypeScript, navegador headless Chromium (`/usr/bin/chromium`), Playwright + `@axe-core/playwright`, archivos CV PDF ES/EN verificados (`proyecto/public/cv/cv-yoel-es.pdf` y `proyecto/public/cv/cv-yoel-en.pdf`) y entregables (`entregables/portafolio.txt`, `entregables/promo.png`).
+- **No disponibles**: endpoint externo autorizado (`VITE_CONTACT_ENDPOINT`) para pruebas reales de envío/recepción de correos.
 
 ## 2. Pasos reproducibles de instalación, arranque y compilación
 
@@ -34,9 +34,10 @@ PLAYWRIGHT_BASE_PATH=/yoel-portfolio/ npm test
 | --- | --- | --- |
 | Auditoría Git de archivos originales | `git diff codex/portafolio-base -- index.html src public docs tests package.json package-lock.json playwright.config.ts tsconfig.json vite.config.ts README.md .gitignore .github` | **Aprobada** (salida vacía: ningún archivo original de `codex/portafolio-base` modificado). |
 | Integridad SHA-256 de marca | `sha256sum public/brand/* proyecto/public/brand/* docs/identidad/favicon-* proyecto/docs/identidad/favicon-* docs/identidad/logo-* proyecto/docs/identidad/logo-*` | **Aprobada** — coincidencia byte a byte en los 4 archivos (`favicon-yoel-32.png`: `85deac2b...`, `favicon-yoel.svg`: `d8aa4222...`, `logo-yoel-claro.svg`: `a9334abd...`, `logo-yoel-oscuro.svg`: `9be85e59...`). |
+| Verificación de CV PDF ES/EN | `file`, `pdftotext`, inspección visual y `sha256sum public/cv/*.pdf dist/cv/*.pdf` | **Aprobada** — ambos son `PDF document, version 1.4, 1 pages` sin modificar, con coincidencia byte a byte entre `pdfcv.zip`, `public/cv/` y `dist/cv/`: `cv-yoel-es.pdf` (`04_CV_Imagen_ES.pdf`, 36 327 B, `21e602e3...`, texto en español) y `cv-yoel-en.pdf` (`05_CV_Imagen_EN.pdf`, 35 685 B, `c38a5fd9...`, texto en inglés). |
 | Validez del parche de despliegue | `awk '/^\`\`\`diff$/{flag=1;next}/^\`\`\`$/{flag=0}flag' propuestas/PROPUESTAS_AUTORIZACION.md \| git apply --check -` | **Aprobada** (`exit 0`, aplica limpiamente sobre `.github/workflows/deploy.yml` sin activarlo ni modificarlo). |
-| Compilación TypeScript + Vite (`/yoel-portfolio/`) | `npm run build -- --base=/yoel-portfolio/` | **Aprobada** (`tsc --noEmit` sin errores; `vite build` generó `dist/` en 822 ms). |
-| Auditoría de bundle publicado (`dist/`) | `grep -rn "__YOEL_TEST_CONTACT_ENDPOINT__\|contact-test\.invalid" dist/` | **Aprobada** (0 coincidencias; ningún gancho de prueba presente en el código publicado; las etiquetas `Descargar CV` y `Download CV` figuran listas para activación). |
+| Compilación TypeScript + Vite (`/yoel-portfolio/`) | `npm run build -- --base=/yoel-portfolio/` | **Aprobada** (`tsc --noEmit` sin errores; `vite build` transformó 131 módulos y generó `dist/` en 873 ms incluyendo `dist/cv/cv-yoel-es.pdf` y `dist/cv/cv-yoel-en.pdf`). |
+| Auditoría de bundle publicado (`dist/`) | `grep -rn "__YOEL_TEST_CONTACT_ENDPOINT__\|contact-test\.invalid" dist/` | **Aprobada** (0 coincidencias; ningún gancho de prueba presente en el código publicado). |
 | Pruebas Playwright + axe-core (`/yoel-portfolio/`) | `PLAYWRIGHT_BASE_PATH=/yoel-portfolio/ npm test` | **42 / 42 pruebas aprobadas** (`42 passed (1.3m)`) en proyectos `escritorio` (1440×1050) y `movil` (iPhone 13, 390×844). |
 
 ### Detalle de las 42 pruebas ejecutadas
@@ -47,10 +48,10 @@ PLAYWRIGHT_BASE_PATH=/yoel-portfolio/ npm test
   - Presencia exacta de 5 `<section>` en `<main>` (sin sexta sección), Misión/Visión/Valores dentro de `#perfil`, enlace visible a GitHub (`https://github.com/yoel-portfolio/yoel-portfolio`) y ausencia de jerga técnica interna (`VITE_CONTACT_ENDPOINT`, «alojamiento estático», «métricas ni demos ficticias») en la interfaz.
   - Verificación del bundle publicado (`dist/` y scripts servidos en `4173`): ausencia total de `__YOEL_TEST_CONTACT_ENDPOINT__` y `contact-test.invalid`, y confirmación de que asignar esa propiedad global en el navegador no altera ni desvía el envío del formulario.
   - Selector de idioma `ES/EN`, actualización de `<html lang>`, persistencia en `yoel-lang` y restauración exacta del texto protegido en español.
-  - Cobertura de CV por idioma (`ES → EN → ES`):
-    - Verifica que `cvConfig.es.available` y `cvConfig.en.available` coincidan exactamente con la presencia real de `proyecto/public/cv/cv-yoel-es.pdf` y `proyecto/public/cv/cv-yoel-en.pdf` (actualmente ambos `false` porque los PDF no llegaron adjuntos en el entorno, evitando enlaces rotos o respuestas `200 text/html` de respaldo SPA).
-    - En estado pendiente confirma la ausencia de `<a class="cv-control-ready">` y el aviso visible por idioma (`CV en PDF (ES) — próximamente` / `Resume PDF (EN) — coming soon`).
-    - Cuando el archivo del idioma esté presente y `available: true`, valida automáticamente la etiqueta exacta (`Descargar CV` / `Download CV`), `href` bajo `/yoel-portfolio/cv/...`, respuesta HTTP 200 con `Content-Type: application/pdf` (rechazando `text/html`), firma `%PDF-`, igualdad SHA-256 contra el archivo en `public/cv/` y evento real de descarga en escritorio y móvil (rama validada temporalmente en local con archivos sintéticos descartados antes del commit).
+  - Descarga real de CV por idioma (`ES → EN → ES`) en escritorio y móvil:
+    - Confirma que `cvConfig.es.available` y `cvConfig.en.available` son `true` y coinciden con `proyecto/public/cv/cv-yoel-es.pdf` y `proyecto/public/cv/cv-yoel-en.pdf`, ambos con firma `%PDF-` y hashes SHA-256 distintos.
+    - En español muestra «Descargar CV» (sin aviso «próximamente»), apunta a `/yoel-portfolio/cv/cv-yoel-es.pdf`, recibe HTTP 200 con `Content-Type: application/pdf` (nunca `text/html`), verifica firma `%PDF-`, SHA-256 idéntico y descarga real con nombre `cv-yoel-es.pdf`.
+    - Al cambiar a inglés muestra «Download CV» (sin «coming soon»), apunta a `/yoel-portfolio/cv/cv-yoel-en.pdf`, recibe HTTP 200 `application/pdf`, verifica `%PDF-`, SHA-256 idéntico y descarga real `cv-yoel-en.pdf`; luego vuelve a español y repite la verificación.
   - Filtros de `#habilidades`, ilustración vectorial SVG (`svg.arch-svg`), reproducción real de Lottie JSON (`lottie-web` `lottie_light` renderizando SVG en `.lottie-stage`) y control Play/Pause.
   - Filtros de `#proyectos`, conteo accesible, apertura de modal (`role="dialog"`), fondo inactivo (`#root[inert]` + `aria-hidden="true"` + bloqueo de scroll), foco atrapado recorriendo el modal con `Tab` y `Shift+Tab` en ambas direcciones, cierre con `Escape` y devolución verificada del foco al botón origen.
   - Formulario bilingüe `ES → EN → ES` con un error visible y datos ingresados: traduce el error al instante en ambos sentidos sin borrar los valores escritos ni mostrar errores nuevos en campos no validados.
@@ -65,9 +66,6 @@ PLAYWRIGHT_BASE_PATH=/yoel-portfolio/ npm test
 
 ## 4. Pruebas NO EJECUTADAS y cómo reproducirlas
 
-- **Descarga efectiva de los CV PDF reales ES/EN (`NO EJECUTADA`)**:
-  - Motivo: los archivos `cv-yoel-es.pdf` y `cv-yoel-en.pdf` no aparecieron adjuntos en el entorno (`/home/antigravity/upload/` únicamente contenía `yoel-portafolio-feat-portafolio-final.zip`), por lo que ambos idiomas se mantuvieron con `available: false` en `proyecto/src/data/portfolioData.ts` (se comprobó además que sin el archivo el servidor preview devuelve `200 text/html` sobre `/yoel-portfolio/cv/cv-yoel-es.pdf`).
-  - Reproducción: adjuntar ambos PDF reales en `proyecto/public/cv/cv-yoel-es.pdf` y `proyecto/public/cv/cv-yoel-en.pdf`, comprobar firma `%PDF-` e idioma, cambiar `available: true` en `proyecto/src/data/portfolioData.ts`, compilar con `--base=/yoel-portfolio/` y ejecutar `PLAYWRIGHT_BASE_PATH=/yoel-portfolio/ npm test`.
 - **Prueba real de envío y recepción de correo en servicio externo (`NO EJECUTADA`)**:
   - Motivo: todavía no se facilitó un endpoint público de Formspree (`VITE_CONTACT_ENDPOINT`) ni autorización para una prueba real de recepción; las pruebas automáticas nunca contactan servicios reales.
   - Reproducción: configurar `VITE_CONTACT_ENDPOINT=https://formspree.io/f/<id>` en una compilación manual (o en GitHub Actions Variables `vars.VITE_CONTACT_ENDPOINT` tras aprobar la propuesta), enviar un mensaje de prueba desde `#contacto` cuando Yoel lo autorice y confirmar respuesta HTTP 2xx y recepción real en `yoerojas03@gmail.com`.

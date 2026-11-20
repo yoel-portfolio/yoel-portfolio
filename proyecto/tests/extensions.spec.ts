@@ -157,6 +157,7 @@ test('CV: botón por idioma ES -> EN -> ES descarga el PDF correcto o muestra pe
 
     const link = hero.getByRole('link', { name: expected.readyLabel, exact: true })
     await expect(link).toBeVisible()
+    await expect(hero).not.toContainText(/próximamente|coming soon/i)
     await expect(link).toHaveAttribute('download', '')
     const expectedHref = `${basePath}cv/${expected.file}`
     await expect(link).toHaveAttribute('href', expectedHref)

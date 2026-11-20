@@ -1,8 +1,8 @@
 import type { Language } from '../i18n'
 
 export const cvConfig = {
-  es: { available: false, path: 'cv/cv-yoel-es.pdf' },
-  en: { available: false, path: 'cv/cv-yoel-en.pdf' },
+  es: { available: true, path: 'cv/cv-yoel-es.pdf' },
+  en: { available: true, path: 'cv/cv-yoel-en.pdf' },
 } as const
 
 export const githubProfile = {
