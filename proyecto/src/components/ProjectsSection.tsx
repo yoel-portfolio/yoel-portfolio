@@ -17,31 +17,110 @@ function getFocusableElements(container: HTMLElement): HTMLElement[] {
 }
 
 function ProjectConceptualSvg({ project, lang }: { project: VerifiedProject; lang: Language }) {
+  const positions = [
+    { x: 6, cx: 54 },
+    { x: 117, cx: 165 },
+    { x: 228, cx: 276 },
+  ] as const
+
   return (
     <div className="project-diagram-wrap">
       <svg
         className="project-diagram-svg"
-        viewBox="0 0 360 100"
+        viewBox="0 0 330 108"
         role="img"
         aria-label={project.diagramCaption[lang]}
       >
-        <rect x="0" y="0" width="360" height="100" rx="6" fill="var(--color-background)" />
+        <rect x="0" y="0" width="330" height="108" rx="8" fill="var(--color-background)" />
         <line
           className="project-diagram-flow"
-          x1="65"
-          y1="50"
-          x2="295"
-          y2="50"
+          x1="102"
+          y1="54"
+          x2="117"
+          y2="54"
           stroke="var(--color-brand)"
-          strokeWidth="1.6"
-          strokeDasharray="5 4"
+          strokeWidth="2"
+          strokeDasharray="4 3"
         />
-        <rect className="project-diagram-node" x="14" y="28" width="98" height="44" rx="6" fill="var(--color-surface)" stroke="var(--color-border)" strokeWidth="1.2" />
-        <rect className="project-diagram-node project-diagram-node-mid" x="131" y="28" width="98" height="44" rx="6" fill="var(--color-surface)" stroke="var(--color-brand)" strokeWidth="1.4" />
-        <rect className="project-diagram-node" x="248" y="28" width="98" height="44" rx="6" fill="var(--color-surface)" stroke="var(--color-accent-text)" strokeWidth="1.4" />
-        <text x="63" y="54" textAnchor="middle" fontSize="9.5" fontWeight="500" fontFamily="var(--font-body)" fill="var(--color-text)">{project.diagramNodes[0]}</text>
-        <text x="180" y="54" textAnchor="middle" fontSize="9.5" fontWeight="600" fontFamily="var(--font-heading)" fill="var(--color-brand-text)">{project.diagramNodes[1]}</text>
-        <text x="297" y="54" textAnchor="middle" fontSize="9.5" fontWeight="500" fontFamily="var(--font-body)" fill="var(--color-text)">{project.diagramNodes[2]}</text>
+        <polygon points="117,54 111,50 111,58" fill="var(--color-brand)" />
+        <line
+          className="project-diagram-flow"
+          x1="213"
+          y1="54"
+          x2="228"
+          y2="54"
+          stroke="var(--color-brand)"
+          strokeWidth="2"
+          strokeDasharray="4 3"
+        />
+        <polygon points="228,54 222,50 222,58" fill="var(--color-brand)" />
+
+        {project.diagramNodes.map((node, idx) => {
+          const { x, cx } = positions[idx]
+          const isMiddle = idx === 1
+          const isLast = idx === 2
+          const stroke = isMiddle
+            ? 'var(--color-brand)'
+            : isLast
+              ? 'var(--color-accent-text)'
+              : 'var(--color-border)'
+          const strokeWidth = idx === 0 ? '1.3' : '1.6'
+          const titleFill = isMiddle ? 'var(--color-brand-text)' : 'var(--color-text)'
+
+          return (
+            <g key={node.title}>
+              <rect
+                className={isMiddle ? 'project-diagram-node project-diagram-node-mid' : 'project-diagram-node'}
+                x={x}
+                y="22"
+                width="96"
+                height="64"
+                rx="8"
+                fill="var(--color-surface)"
+                stroke={stroke}
+                strokeWidth={strokeWidth}
+              />
+              {node.subtitle ? (
+                <>
+                  <text
+                    x={cx}
+                    y="49"
+                    textAnchor="middle"
+                    fontSize="12"
+                    fontWeight="600"
+                    fontFamily="var(--font-heading)"
+                    fill={titleFill}
+                  >
+                    {node.title}
+                  </text>
+                  <text
+                    x={cx}
+                    y="67"
+                    textAnchor="middle"
+                    fontSize="10.5"
+                    fontWeight="500"
+                    fontFamily="var(--font-body)"
+                    fill="var(--color-text-secondary)"
+                  >
+                    {node.subtitle}
+                  </text>
+                </>
+              ) : (
+                <text
+                  x={cx}
+                  y="58"
+                  textAnchor="middle"
+                  fontSize="12"
+                  fontWeight="600"
+                  fontFamily="var(--font-heading)"
+                  fill={titleFill}
+                >
+                  {node.title}
+                </text>
+              )}
+            </g>
+          )
+        })}
       </svg>
     </div>
   )
@@ -176,13 +255,13 @@ export function ProjectsSection({ lang }: { lang: Language }) {
               <p className="project-summary">{project.shortSummary[lang]}</p>
 
               <ul className="project-tech-list" aria-label={project.title[lang]}>
-                {project.technologies.map((tech) => (
+                {project.coreTechnologies.map((tech) => (
                   <li key={tech}>{tech}</li>
                 ))}
               </ul>
 
-              <p className="project-participation">
-                <strong>{t.participationLabel}:</strong> {project.participation[lang]}
+              <p className="project-participation project-participation-brief">
+                <strong>{t.participationLabel}:</strong> {project.shortParticipation[lang]}
               </p>
 
               <div className="project-actions">
@@ -227,7 +306,7 @@ export function ProjectsSection({ lang }: { lang: Language }) {
               className="project-modal"
             >
               <div className="project-modal-header">
-                <div>
+                <div className="project-modal-heading-group">
                   <p className="eyebrow">{t.eyebrowLabel}</p>
                   <h3 id="project-modal-title" className="project-modal-title">
                     {selectedProject.title[lang]}
@@ -244,34 +323,40 @@ export function ProjectsSection({ lang }: { lang: Language }) {
                 </button>
               </div>
 
-              <div className="project-modal-body">
-                <ProjectConceptualSvg project={selectedProject} lang={lang} />
-                <p className="project-modal-desc">{selectedProject.description[lang]}</p>
+              <div
+                className="project-modal-body-scroll"
+                tabIndex={0}
+                aria-label={selectedProject.title[lang]}
+              >
+                <div className="project-modal-body">
+                  <ProjectConceptualSvg project={selectedProject} lang={lang} />
+                  <p className="project-modal-desc">{selectedProject.description[lang]}</p>
 
-                <div className="project-modal-block">
-                  <p className="project-modal-label">{t.modalHighlightsLabel}</p>
-                  <ul className="project-highlights">
-                    {selectedProject.highlights[lang].map((item) => (
-                      <li key={item}>{item}</li>
+                  <div className="project-modal-block">
+                    <p className="project-modal-label">{t.modalHighlightsLabel}</p>
+                    <ul className="project-highlights">
+                      {selectedProject.highlights[lang].map((item) => (
+                        <li key={item}>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="project-modal-block">
+                    <p className="project-modal-label">{t.participationLabel}</p>
+                    <p className="project-modal-text">{selectedProject.participation[lang]}</p>
+                  </div>
+
+                  <div className="project-modal-block">
+                    <p className="project-modal-label">{t.statusLabel}</p>
+                    <p className="project-modal-text">{selectedProject.status[lang]}</p>
+                  </div>
+
+                  <ul className="project-tech-list">
+                    {selectedProject.technologies.map((tech) => (
+                      <li key={tech}>{tech}</li>
                     ))}
                   </ul>
                 </div>
-
-                <div className="project-modal-block">
-                  <p className="project-modal-label">{t.participationLabel}</p>
-                  <p className="project-modal-text">{selectedProject.participation[lang]}</p>
-                </div>
-
-                <div className="project-modal-block">
-                  <p className="project-modal-label">{t.statusLabel}</p>
-                  <p className="project-modal-text">{selectedProject.status[lang]}</p>
-                </div>
-
-                <ul className="project-tech-list">
-                  {selectedProject.technologies.map((tech) => (
-                    <li key={tech}>{tech}</li>
-                  ))}
-                </ul>
               </div>
 
               <div className="project-modal-footer">

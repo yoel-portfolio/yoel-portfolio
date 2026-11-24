@@ -140,19 +140,26 @@ export const personalSkills: Array<{ id: string; title: Record<Language, string>
 
 export type ProjectCategory = 'backend' | 'frontend' | 'fullstack'
 
+export interface ProjectDiagramNode {
+  title: string
+  subtitle?: string
+}
+
 export interface VerifiedProject {
   id: string
   category: ProjectCategory
   title: Record<Language, string>
   shortSummary: Record<Language, string>
   description: Record<Language, string>
+  coreTechnologies: string[]
   technologies: string[]
+  shortParticipation: Record<Language, string>
   participation: Record<Language, string>
   status: Record<Language, string>
   highlights: Record<Language, string[]>
   repoUrl: string
   diagramCaption: Record<Language, string>
-  diagramNodes: [string, string, string]
+  diagramNodes: [ProjectDiagramNode, ProjectDiagramNode, ProjectDiagramNode]
 }
 
 export const verifiedProjects: VerifiedProject[] = [
@@ -171,7 +178,12 @@ export const verifiedProjects: VerifiedProject[] = [
       es: 'Arquitectura de dos microservicios en Java 21 y Spring Boot: OrderMS expone la API REST de órdenes (PENDIENTE, PAGADO, FALLO_PAGO), almacena datos no sensibles en PostgreSQL 16 y cifra datos de tarjeta con RSA-2048 OAEP antes de publicar eventos en Apache Kafka. PaymentMS consume el evento, descifra en memoria sin persistir tarjeta y emite el resultado.',
       en: 'Two-microservice architecture built with Java 21 and Spring Boot: OrderMS exposes the order REST API (PENDIENTE, PAGADO, FALLO_PAGO), stores non-sensitive order fields in PostgreSQL 16, and encrypts card data with RSA-2048 OAEP before publishing events to Apache Kafka. PaymentMS consumes events, decrypts in memory without persisting card fields, and publishes the payment result.',
     },
+    coreTechnologies: ['Java 21', 'Spring Boot 3', 'Apache Kafka', 'PostgreSQL 16'],
     technologies: ['Java 21', 'Spring Boot 3', 'Apache Kafka', 'PostgreSQL 16', 'Docker Compose', 'Maven'],
+    shortParticipation: {
+      es: 'Implementé ambos microservicios, eventos Kafka, cifrado RSA y Docker Compose.',
+      en: 'Built both microservices, Kafka event flow, RSA encryption, and Docker Compose.',
+    },
     participation: {
       es: 'Desarrollo completo en el repositorio público (Yoerojas): implementación de order-ms, payment-ms, flujo de eventos Kafka (order-placed / payment-processed), cifrado RSA en tránsito y orquestación con Docker Compose.',
       en: 'Full implementation in the public repository (Yoerojas): order-ms and payment-ms services, Kafka event workflow (order-placed / payment-processed), RSA in-transit encryption, and Docker Compose orchestration.',
@@ -197,7 +209,11 @@ export const verifiedProjects: VerifiedProject[] = [
       es: 'Ilustración conceptual: OrderMS -> Kafka -> PaymentMS',
       en: 'Conceptual illustration: OrderMS -> Kafka -> PaymentMS',
     },
-    diagramNodes: ['OrderMS (REST + PG)', 'Kafka (RSA Event)', 'PaymentMS'],
+    diagramNodes: [
+      { title: 'OrderMS', subtitle: 'REST + PG' },
+      { title: 'Kafka', subtitle: 'RSA Event' },
+      { title: 'PaymentMS' },
+    ],
   },
   {
     id: 'velocity',
@@ -214,7 +230,12 @@ export const verifiedProjects: VerifiedProject[] = [
       es: 'Base técnica del cliente web para un FPS de movimiento competitivo en el navegador. Implementa el controlador de movimiento en primera persona (Pointer Lock, WASD, salto), detección de suelo con Ammo.js y el entorno de pruebas graybox Movement Lab en PlayCanvas.',
       en: 'Technical foundation for a browser-based competitive movement FPS client. Implements the first-person movement controller (Pointer Lock, WASD, jump), Ammo.js ground probing, and the graybox Movement Lab evaluation scene in PlayCanvas.',
     },
+    coreTechnologies: ['TypeScript', 'PlayCanvas', 'Ammo.js', 'Vite'],
     technologies: ['TypeScript', 'Vite', 'PlayCanvas', 'Ammo.js', 'Vitest', 'ESLint'],
+    shortParticipation: {
+      es: 'Desarrollé CharacterMotor, Pointer Lock, GroundProbe, pruebas y MovementLab.',
+      en: 'Built CharacterMotor, Pointer Lock, GroundProbe, unit tests, and MovementLab.',
+    },
     participation: {
       es: 'Desarrollo en el repositorio público (yrojasar): controlador CharacterMotor, entrada Pointer Lock, módulo de física GroundProbe, pruebas unitarias movementMath.test.ts y escena MovementLab.',
       en: 'Development in the public repository (yrojasar): CharacterMotor controller, Pointer Lock input, GroundProbe physics module, movementMath.test.ts unit tests, and MovementLab scene.',
@@ -240,7 +261,11 @@ export const verifiedProjects: VerifiedProject[] = [
       es: 'Ilustración conceptual: Input -> CharacterMotor -> MovementLab',
       en: 'Conceptual illustration: Input -> CharacterMotor -> MovementLab',
     },
-    diagramNodes: ['PlayerInput', 'CharacterMotor', 'Ammo.js / Lab'],
+    diagramNodes: [
+      { title: 'Player', subtitle: 'Input' },
+      { title: 'Character', subtitle: 'Motor' },
+      { title: 'Ammo.js', subtitle: 'Lab' },
+    ],
   },
   {
     id: 'sistema-gestion-academica',
@@ -257,7 +282,12 @@ export const verifiedProjects: VerifiedProject[] = [
       es: 'Proyecto de Estructuras de Datos II (Universidad CENFOTEC) compuesto por un backend en C++17 con CatalogService, BPlusTree, cola de reservas FIFO, grafo de temas y persistencia JSON/MongoDB, conectado mediante API HTTP a una aplicación React + TypeScript que lista obras y visualiza nodos y hojas enlazadas del árbol B+.',
       en: 'Data Structures II project (CENFOTEC University) pairing a C++17 backend (CatalogService, B+ Tree, FIFO reservation queue, topic graph, JSON/MongoDB persistence) with a React + TypeScript frontend querying the HTTP API and visualizing B+ Tree nodes and linked leaves.',
     },
+    coreTechnologies: ['C++17', 'React', 'TypeScript', 'MongoDB'],
     technologies: ['C++17', 'CMake', 'React', 'TypeScript', 'Vite', 'MongoDB'],
+    shortParticipation: {
+      es: 'Implementé las estructuras en C++17, las pruebas, el cliente React y CI.',
+      en: 'Built the C++17 data structures, automated tests, React frontend, and CI.',
+    },
     participation: {
       es: 'Autoría verificada (yrojasar / Yoel Alexander Rojas Arguedas): estructuras de datos en C++17, pruebas CTest/ASan/UBSan/Python, cliente web en frontend/ y automatización CI.',
       en: 'Verified authorship (yrojasar / Yoel Alexander Rojas Arguedas): C++17 data structures, CTest/ASan/UBSan/Python test suites, React frontend/, and CI pipeline.',
@@ -283,6 +313,10 @@ export const verifiedProjects: VerifiedProject[] = [
       es: 'Ilustración conceptual: React -> API HTTP C++17 -> B+ Tree',
       en: 'Conceptual illustration: React -> C++17 HTTP API -> B+ Tree',
     },
-    diagramNodes: ['React + TS', 'C++17 HTTP API', 'B+ Tree / Mongo'],
+    diagramNodes: [
+      { title: 'React + TS', subtitle: 'Frontend' },
+      { title: 'C++17', subtitle: 'HTTP API' },
+      { title: 'B+ Tree', subtitle: 'MongoDB' },
+    ],
   },
 ]
