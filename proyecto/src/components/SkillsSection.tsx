@@ -13,7 +13,6 @@ export function SkillsSection({ lang }: { lang: Language }) {
             <span aria-hidden="true">{t.eyebrowNum}</span> {t.eyebrowLabel}
           </p>
           <h2 id="skills-title">{t.title}</h2>
-          <p className="section-intro">{t.intro}</p>
         </div>
       </div>
 
