@@ -241,9 +241,9 @@ test('habilidades técnicas arriba y personales abajo, sin ilustración conceptu
   await expect(skills.locator('.personal-skill-card').first()).toHaveAttribute('data-revealed', 'true')
 })
 
-test('galería de proyectos: los 3 proyectos sin filtros, animación al desplazar, foco atrapado con Tab/Shift+Tab, Escape y devolución de foco', async ({
+test('galería de proyectos: los 3 proyectos sin filtros, botones alineados, ficha con cierre visible al desplazar, Tab/Shift+Tab y Escape', async ({
   page,
-}) => {
+}, testInfo) => {
   await page.goto('./')
   const projects = page.locator('#proyectos')
   await expect(projects.locator('.project-card')).toHaveCount(3)
@@ -254,12 +254,40 @@ test('galería de proyectos: los 3 proyectos sin filtros, animación al desplaza
   await projects.locator('.project-card').first().scrollIntoViewIfNeeded()
   await expect(projects.locator('.project-card').first()).toHaveAttribute('data-revealed', 'true')
 
+  // Cada tarjeta muestra tecnologías principales (<= 4); la lista completa va en la ficha
+  const cardTechCount = await projects.locator('.project-card').first().locator('.project-tech-list li').count()
+  expect(cardTechCount).toBeLessThanOrEqual(4)
+
+  // En escritorio, una vez completada la animación de entrada, los botones de las 3 tarjetas quedan alineados
+  if (testInfo.project.name === 'escritorio') {
+    await expect
+      .poll(async () => {
+        const detailBoxes = await Promise.all(
+          [0, 1, 2].map((i) => projects.locator('.project-detail-btn').nth(i).boundingBox()),
+        )
+        const repoBoxes = await Promise.all(
+          [0, 1, 2].map((i) => projects.locator('.project-repo-link').nth(i).boundingBox()),
+        )
+        if (!detailBoxes.every(Boolean) || !repoBoxes.every(Boolean)) return 999
+        return Math.max(
+          Math.abs(detailBoxes[0]!.y - detailBoxes[1]!.y),
+          Math.abs(detailBoxes[1]!.y - detailBoxes[2]!.y),
+          Math.abs(repoBoxes[0]!.y - repoBoxes[1]!.y),
+          Math.abs(repoBoxes[1]!.y - repoBoxes[2]!.y),
+        )
+      })
+      .toBeLessThanOrEqual(2)
+  }
+
   const detailBtn = projects.locator('.project-detail-btn').first()
   await detailBtn.click()
 
   const dialog = page.getByRole('dialog')
   await expect(dialog).toBeVisible()
   await expect(dialog).toContainText('OrderMS y PaymentMS')
+  // La ficha conserva la lista completa de tecnologías y el aporte detallado
+  await expect(dialog.locator('.project-tech-list li')).toHaveCount(6)
+  await expect(dialog).toContainText('order-placed / payment-processed')
 
   // El fondo queda inactivo mientras el modal está abierto
   await expect(page.locator('#root')).toHaveAttribute('inert', '')
@@ -267,13 +295,32 @@ test('galería de proyectos: los 3 proyectos sin filtros, animación al desplaza
   expect(await page.evaluate(() => document.body.style.overflow)).toBe('hidden')
 
   const headerCloseBtn = dialog.getByRole('button', { name: 'Cerrar detalle del proyecto' })
+  const scrollBody = dialog.locator('.project-modal-body-scroll')
   const repoLink = dialog.getByRole('link', { name: /Repositorio en GitHub/ })
   const footerCloseBtn = dialog.getByRole('button', { name: 'Cerrar ficha' })
 
   // Al abrir, el foco entra en el modal
   await expect(headerCloseBtn).toBeFocused()
 
-  // Recorrido hacia adelante con Tab (atrapado dentro del modal)
+  // Al desplazar el contenido de la ficha, el botón de cierre permanece visible en pantalla
+  const scrolled = await scrollBody.evaluate((el) => {
+    el.scrollTop = 260
+    return { scrollTop: el.scrollTop, scrollable: el.scrollHeight > el.clientHeight }
+  })
+  if (scrolled.scrollable) {
+    expect(scrolled.scrollTop).toBeGreaterThan(0)
+  }
+  const closeBox = await headerCloseBtn.boundingBox()
+  const viewport = page.viewportSize()
+  expect(closeBox && viewport).toBeTruthy()
+  if (closeBox && viewport) {
+    expect(closeBox.y).toBeGreaterThanOrEqual(0)
+    expect(closeBox.y + closeBox.height).toBeLessThanOrEqual(viewport.height)
+  }
+
+  // Recorrido hacia adelante con Tab (atrapado dentro del modal, incluyendo el cuerpo desplazable)
+  await page.keyboard.press('Tab')
+  await expect(scrollBody).toBeFocused()
   await page.keyboard.press('Tab')
   await expect(repoLink).toBeFocused()
   await page.keyboard.press('Tab')
@@ -287,6 +334,8 @@ test('galería de proyectos: los 3 proyectos sin filtros, animación al desplaza
   await page.keyboard.press('Shift+Tab')
   await expect(repoLink).toBeFocused()
   await page.keyboard.press('Shift+Tab')
+  await expect(scrollBody).toBeFocused()
+  await page.keyboard.press('Shift+Tab')
   await expect(headerCloseBtn).toBeFocused()
 
   // Cierre con Escape restaura fondo activo y devuelve foco al botón origen
@@ -295,6 +344,84 @@ test('galería de proyectos: los 3 proyectos sin filtros, animación al desplaza
   await expect(page.locator('#root')).not.toHaveAttribute('inert', '')
   await expect(page.locator('#root')).not.toHaveAttribute('aria-hidden', 'true')
   await expect(detailBtn).toBeFocused()
+})
+
+test('cabecera responsiva (320, 390, 768 y 1440 px en ES/EN), teclado, ambos logos y sin solapamiento en contacto', async ({
+  page,
+}) => {
+  await page.goto('./')
+
+  // Comprueba que ambos logos cargan correctamente al alternar el tema
+  const logo = page.locator('img.brand-logo')
+  await expect(logo).toHaveAttribute('src', /logo-yoel-claro\.svg$/)
+  expect(await logo.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0)).toBe(true)
+  await page.getByRole('button', { name: 'Modo oscuro' }).click()
+  await expect(logo).toHaveAttribute('src', /logo-yoel-oscuro\.svg$/)
+  expect(await logo.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth > 0)).toBe(true)
+  await page.getByRole('button', { name: 'Modo oscuro' }).click()
+
+  for (const langBtn of ['ES', 'EN'] as const) {
+    await page.getByRole('button', { name: langBtn, exact: true }).click()
+
+    // 320 y 390 px: logo, idioma y tema en fila superior + enlaces en cuadrícula 2 × 2 sin desbordamiento
+    for (const width of [320, 390]) {
+      await page.setViewportSize({ width, height: 844 })
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true)
+
+      const logoBox = await page.locator('.brand-link').boundingBox()
+      const controlsBox = await page.locator('.header-controls').boundingBox()
+      expect(logoBox && controlsBox).toBeTruthy()
+      if (logoBox && controlsBox) {
+        expect(Math.abs(logoBox.y - controlsBox.y)).toBeLessThanOrEqual(16)
+      }
+
+      const navBoxes = await Promise.all([0, 1, 2, 3].map((i) => page.locator('.main-nav a').nth(i).boundingBox()))
+      expect(navBoxes.every(Boolean)).toBe(true)
+      if (navBoxes[0] && navBoxes[1] && navBoxes[2] && navBoxes[3]) {
+        // Fila 1: enlaces 0 y 1; Fila 2: enlaces 2 y 3 (cuadrícula 2 × 2)
+        expect(Math.abs(navBoxes[0].y - navBoxes[1].y)).toBeLessThanOrEqual(2)
+        expect(Math.abs(navBoxes[2].y - navBoxes[3].y)).toBeLessThanOrEqual(2)
+        expect(navBoxes[2].y).toBeGreaterThan(navBoxes[0].y + 20)
+        for (const box of navBoxes) {
+          expect(box!.height).toBeGreaterThanOrEqual(42)
+        }
+      }
+    }
+
+    // 768 y 1440 px: los 4 enlaces en una sola fila sin desbordamiento
+    for (const width of [768, 1440]) {
+      await page.setViewportSize({ width, height: 900 })
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true)
+      const navBoxes = await Promise.all([0, 1, 2, 3].map((i) => page.locator('.main-nav a').nth(i).boundingBox()))
+      expect(navBoxes.every(Boolean)).toBe(true)
+      if (navBoxes[0] && navBoxes[1] && navBoxes[2] && navBoxes[3]) {
+        expect(Math.abs(navBoxes[0].y - navBoxes[3].y)).toBeLessThanOrEqual(2)
+      }
+    }
+  }
+
+  // Navegación real del menú por teclado en móvil (390 px) con foco visible
+  await page.getByRole('button', { name: 'ES', exact: true }).click()
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.locator('.brand-link').focus()
+  await page.keyboard.press('Tab')
+  const firstNavLink = page.locator('.main-nav a').first()
+  await expect(firstNavLink).toBeFocused()
+  await expect(firstNavLink).toHaveCSS('outline-style', 'solid')
+
+  // Al bajar hasta el final de la página, los botones flotantes no tapan el botón enviar ni los enlaces de contacto
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight))
+  const dockBox = await page.locator('.floating-dock').boundingBox()
+  const submitBox = await page.locator('#contacto .form-submit-btn').boundingBox()
+  expect(dockBox && submitBox).toBeTruthy()
+  if (dockBox && submitBox) {
+    const overlapsSubmit =
+      submitBox.x < dockBox.x + dockBox.width &&
+      submitBox.x + submitBox.width > dockBox.x &&
+      submitBox.y < dockBox.y + dockBox.height &&
+      submitBox.y + submitBox.height > dockBox.y
+    expect(overlapsSubmit).toBe(false)
+  }
 })
 
 test('formulario bilingüe: traduce errores visibles ES -> EN -> ES sin borrar datos ni validar campos intactos', async ({
