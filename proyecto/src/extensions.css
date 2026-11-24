@@ -521,11 +521,13 @@ html {
   font-weight: 600;
   line-height: 1.3;
   letter-spacing: -0.025em;
+  color: var(--color-text);
   transition: color 0.2s ease;
 }
 
-.project-card:hover .project-title {
-  color: var(--color-brand-text);
+.project-card:hover .project-title,
+.project-card:focus-within .project-title {
+  color: var(--color-text);
 }
 
 .project-summary {
