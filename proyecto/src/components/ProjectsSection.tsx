@@ -65,7 +65,6 @@ function ProjectConceptualSvg({ project, lang }: { project: VerifiedProject; lan
               ? 'var(--color-accent-text)'
               : 'var(--color-border)'
           const strokeWidth = idx === 0 ? '1.3' : '1.6'
-          const titleFill = isMiddle ? 'var(--color-brand-text)' : 'var(--color-text)'
 
           return (
             <g key={node.title}>
@@ -89,7 +88,7 @@ function ProjectConceptualSvg({ project, lang }: { project: VerifiedProject; lan
                     fontSize="12"
                     fontWeight="600"
                     fontFamily="var(--font-heading)"
-                    fill={titleFill}
+                    fill="var(--color-text)"
                   >
                     {node.title}
                   </text>
@@ -113,7 +112,7 @@ function ProjectConceptualSvg({ project, lang }: { project: VerifiedProject; lan
                   fontSize="12"
                   fontWeight="600"
                   fontFamily="var(--font-heading)"
-                  fill={titleFill}
+                  fill="var(--color-text)"
                 >
                   {node.title}
                 </text>
